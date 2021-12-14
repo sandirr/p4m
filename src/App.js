@@ -9,7 +9,7 @@ function App() {
     <Fragment>
       <Router>
         <Switch>
-          <Route path="/" component={pages.Home} />
+          <Route path={['/', '/beranda']} exact component={pages.Home} />
         </Switch>
       </Router>
     </Fragment>

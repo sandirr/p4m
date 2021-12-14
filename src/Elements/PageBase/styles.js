@@ -1,7 +1,7 @@
 import { Colors } from '../../Configs';
 
 const styles = {
-  root:{ display: 'flex', backgroundColor:'#EDF4F7', height:'100vh', overflowY:'auto', width:'100vw' },
+  root:{ display: 'flex', backgroundColor:'#EDF4F7', overflow:'hidden', height:'100vh' },
   listHead:{
     color:`${Colors.grey60} !important`, 
     fontSize:'14px !important', 

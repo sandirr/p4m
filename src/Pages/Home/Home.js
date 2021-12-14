@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars */
 import React, {Component} from 'react';
-import { Button, Card, CardActionArea, CardActions, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography } from '@mui/material';
+import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, IconButton, LinearProgress, linearProgressClasses, Badge } from '@mui/material';
+import { AccessTimeRounded, GroupsRounded, FilterListRounded } from '@mui/icons-material';
 import {PageBase} from '../../Elements';
 import PropTypes from 'prop-types';
 import { SearchRounded } from '@mui/icons-material';
@@ -21,361 +23,108 @@ export default class Home extends Component{
   render(){
     const {activeTab} = this.state;
     const {classes} = this.props;
-    console.log(this.matches);
     return(
-      <PageBase>
-        <Grid container spacing={2} alignItems="center" >
-          <Grid item lg={8} xs={12}>
-            <Paper className={classes.tabs}>
+      <PageBase activePage="Beranda" pageTitle="Beranda" >
+        <Grid container spacing={2} alignItems="center" className={classes.root}>
+          <Grid item lg={8} xs={12} className="sticky">
+            <Paper className={classes.paperBar} >
               <Tabs 
                 value={activeTab} 
                 indicatorColor={null}
                 onChange={this._handleChangeTab} 
+                className={classes.tabs}
                 variant="scrollable"
                 scrollButtons="auto">
-                <Tab sx={{textTransform:'none'}} label="Informatika" />
-                <Tab sx={{textTransform:'none'}} label="Design & Kreatif" />
-                <Tab sx={{textTransform:'none'}} label="Bahasa & Sastra" />
-                <Tab sx={{textTransform:'none'}} label="Informatika" />
-                <Tab sx={{textTransform:'none'}} label="Design & Kreatif" />
-                <Tab sx={{textTransform:'none'}} label="Bahasa & Sastra" />
+                <Tab className="tab" label="Semua" />
+                <Tab className="tab" label="Informatika" />
+                <Tab className="tab" label="Design & Kreatif" />
+                <Tab className="tab" label="Bahasa & Sastra" />
+                <Tab className="tab" label="Agama" />
+                <Tab className="tab" label="Manajemen" />
+                <Tab className="tab" label="Ekonomi & Perbankan" />
+                <Tab className="tab" label="Dakwah & Komunikasi" />
+                <Tab className="tab" label="Hukum" />
+                <Tab className="tab" label="Kesehatan" />
               </Tabs>
             </Paper>
           </Grid>
-          <Grid item lg={4} xs={12} justifyContent="flex-end">
-            <Paper className={classes.tabs}>
+          <Grid item lg={4} xs={12} className="sticky">
+            <Paper className={classes.paperBar}>
               <TextField 
                 placeholder="Cari kursus membuat website" 
                 size="small" 
                 variant="outlined"
                 fullWidth
+                sx={{padding:'3px 0'}}
                 InputProps={{
                   startAdornment:(
                     <SearchRounded sx={{marginRight:1, color: Colors.primary}} />
                   ),
-                  disableUnderline: true,
+                  endAdornment:(
+                    <IconButton>
+                      <Badge color="error" variant="dot">
+                        <FilterListRounded sx={{color: Colors.primary}} />
+                      </Badge>
+                    </IconButton>
+                  ),
                   classes:{notchedOutline:classes.noBorder}
                 }}
               />
             </Paper>
           </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid item lg={4} md={6} xs={12} xl={3} >
-            <Card sx={{boxShadow:'none'}}>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
-                  alt="green iguana"
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    Lizard
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Lizards are a widespread group of squamate reptiles, with over 6,000
-                    species, ranging across all continents except Antarctica
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                    Share
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
+          {[1,2,3,4,5,6,7,8,9].map(e=>(
+            <Grid item lg={4} md={6} xs={12} xl={3} key={e}>
+              <Card className="card-item" >
+                <CardActionArea>
+                  <CardMedia
+                    component="img"
+                    height="150"
+                    image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
+                    alt="green iguana"
+                  />
+                  <div className="category" >Teknologi</div>
+                  <CardContent>
+                    <Typography variant="body2" className="event-date">
+                      <AccessTimeRounded className="desc-icon" />
+                      <span>
+                      Kamis, 20 Agustus 2021
+                      </span>
+                    </Typography>
+                    <Typography variant="body2" className="event-title">
+                    Workshop Peningkatan Kompetensi Guru dalam Membuat Media Pembelajaran Berbasis IT
+                    </Typography>
+                    <Typography variant="body1" className="price">
+                    Rp200.000
+                    </Typography>
+                    <Typography variant="body2" className="joined">
+                      <GroupsRounded className="desc-icon" />
+                      <div style={{width:'100%'}}>
+                        <LinearProgress sx={progressStyle} variant="determinate" value={12/25 * 100} />
+                      </div>
+                      <span className="participants" >12/25</span>
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          ))}
         </Grid>
       </PageBase>
     );
   }
 }
+
+const progressStyle ={
+  [`&.${linearProgressClasses.colorPrimary}`]: {
+    backgroundColor: Colors.error_light,
+    borderRadius:25,
+    height:5
+  },
+  [`& .${linearProgressClasses.bar}`]: {
+    borderRadius: 25,
+    backgroundColor: Colors.primary_light,
+  },
+};
 
 Home.propTypes = {
   classes: PropTypes.object,

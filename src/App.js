@@ -10,6 +10,7 @@ function App() {
       <Router>
         <Switch>
           <Route path={['/', '/beranda']} exact component={pages.Home} />
+          <Route path={['/area-mentor/:roomId', '/sesi/:roomId']} exact component={pages.Room} />
         </Switch>
       </Router>
     </Fragment>

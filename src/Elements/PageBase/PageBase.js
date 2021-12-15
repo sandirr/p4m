@@ -22,6 +22,8 @@ import ConfirmationModal from '../ConfirmationModal';
 import PopUp from '../PopUp';
 import { fAuth } from '../../Configs';
 import { RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, ConfirmationResult } from '@firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { firestore } from '../../Configs/firebase';
 
 const drawerWidth = 260;
 
@@ -90,7 +92,7 @@ export default function PageBase(props) {
   const history = useHistory();
   const [open, setOpen] = React.useState(matches);
   const [pop, setPop] = React.useState('');
-  const [isLogin,setIsLogin] = React.useState(true);
+  const [isLogin,setIsLogin] = React.useState({});
 
   const [hp, setHp] = React.useState('');
   const [otp, setOtp] = React.useState('');
@@ -98,8 +100,8 @@ export default function PageBase(props) {
 
   React.useEffect(()=>{
     fAuth.onAuthStateChanged(user=>{
-      if(user)setIsLogin(true);
-      else setIsLogin(false);
+      if(user)setIsLogin(user);
+      else setIsLogin(null);
       setPop('');
     });
   },[]);
@@ -129,10 +131,8 @@ export default function PageBase(props) {
     window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {'size': 'invisible',}, fAuth);
   };
 
-  const handleRedirect = () => {
-    if(location.pathname !== '/'){
-      history.replace('/');
-    }
+  const changeRoute = (to) => () => {
+    history.push(`/${to}`);
   };
 
   const setNumber = (e) =>{
@@ -156,7 +156,7 @@ export default function PageBase(props) {
         // SMS sent. Prompt user to type the code from the message, then sign the
         // user in with confirmationResult.confirm(code).
         window.confirmationResult = confirmationResult;
-        handleRedirect();
+        // handleRedirect();
       // ...
       }).catch((error) => {
       // Error; SMS not sent
@@ -171,6 +171,7 @@ export default function PageBase(props) {
     await window.confirmationResult.confirm(otp).then((result) => {
       // User signed in successfully.
       const user = result.user;
+      checkUser(user);
       // ...
     }).catch((error) => {
       // User couldn't sign in (bad verification code?)
@@ -192,6 +193,7 @@ export default function PageBase(props) {
 
         // The signed-in user info.
         const user = result.user;
+        checkUser(user);
         // ...
         // handleRedirect();
       }).catch((error) => {
@@ -204,6 +206,17 @@ export default function PageBase(props) {
         // const credential = GoogleAuthProvider.credentialFromError(error);
         // ...
       });
+  };
+
+  const checkUser = async (user) =>{
+    console.log('oi');
+    const userRef = doc(firestore, `users/${user.uid}`);
+    const userSnap = await getDoc(userRef);
+    if(!userSnap.exists()){
+      alert('tambahin oi');
+    }else{
+      console.log(userSnap.data());
+    }
   };
 
   const checkSign = () => {
@@ -247,26 +260,30 @@ export default function PageBase(props) {
               </Grid>
               <Grid item>
                 <div style={{display: 'flex', alignItems:'center'}}>
-                  <div>
-                    <IconButton id="sign-in-button">
-                      <NotificationsRounded sx={{fontSize:20, color:Colors.black}} />
-                    </IconButton>
-                  </div>
-                  <div style={{display:'flex', alignItems:'center', margin:'0 14px'}}>
-                    <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} >AI</Avatar>
-                    {matches &&
-                    <div style={{marginLeft:10}} >
-                      <div style={{color:Colors.black, fontWeight:400}} >Andi Irsandi R.</div>
-                      <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >UIN Alauddin Makassar</div>
-                    </div> 
-                    }
-                  </div>
+                  {isLogin &&
+                    <div>
+                      <IconButton id="sign-in-button">
+                        <NotificationsRounded sx={{fontSize:20, color:Colors.black}} />
+                      </IconButton>
+                    </div>
+                  }
+                  {isLogin &&
+                    <div style={{display:'flex', alignItems:'center', margin:'0 14px'}}>
+                      <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} src={isLogin.photoURL} ></Avatar>
+                      {matches &&
+                      <div style={{marginLeft:10}} >
+                        <div style={{color:Colors.black, fontWeight:400}} >Andi Irsandi R.</div>
+                        <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >UIN Alauddin Makassar</div>
+                      </div> 
+                      }
+                    </div>
+                  }
                   <div>
                     <IconButton onClick={checkSign} >
                       {isLogin ?
-                        <Logout sx={{fontSize:20, color:Colors.black}} /> 
+                        <Logout sx={{fontSize:20, color:Colors.black}} style={{marginTop:-6}} /> 
                         :
-                        <Login sx={{fontSize:20, color:Colors.black}} /> 
+                        <Login sx={{fontSize:20, color:Colors.black}} style={{marginTop:-6}} /> 
                       }
                     </IconButton>
                     {isLogin ?
@@ -305,39 +322,39 @@ export default function PageBase(props) {
           </div>
         </Toolbar>
         <List style={{padding:'24px 10px 0'}}>
-          <ListItem button className={activePage === 'Beranda' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('beranda')} button className={activePage === 'Beranda' ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <HomeRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Beranda" />
           </ListItem>
-          <ListItem disabled={!isLogin} button className={activePage === 'Area Mentor' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('area-mentor')} disabled={!isLogin} button className={activePage === 'Area Mentor' ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <ImportantDevicesRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Area Mentor" />
           </ListItem>
           <Typography className={classes.listHead} >Sesi</Typography>
-          <ListItem disabled={!isLogin} button className={activePage === 'Sesi Diikuti' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('sesi')} disabled={!isLogin} button className={activePage === 'Sesi Diikuti' ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <GroupWork className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Sesi Diikuti" />
           </ListItem>
-          <ListItem disabled={!isLogin} button className={activePage === 'Pembayaran' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('pembayaran')} disabled={!isLogin} button className={activePage === 'Pembayaran' ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <PaymentsRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Pembayaran" />
           </ListItem>
           <Typography className={classes.listHead}>P4M Care</Typography>
-          <ListItem button className={activePage === 'Bantuan' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('bantuan')} button className={activePage === 'Bantuan' ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <ErrorRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Bantuan" />
           </ListItem>
-          <ListItem button className={activePage === 'FAQ' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('faq')}button className={activePage === 'FAQ' ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <HelpRounded className="list-icon" />
             </ListItemIcon>
@@ -390,15 +407,14 @@ export default function PageBase(props) {
                   />
                 </React.Fragment>:
                 <React.Fragment>
-                  <IconButton onClick={loginWithGmail}>
-                    <img alt="google" src={Images.GOOGLE} width={40} height={40} />
-                  </IconButton>
-                  <div>atau</div>
+                  <Button variant='outlined' fullWidth sx={{textTransform:'none',}} startIcon={(<img alt="google" src={Images.GOOGLE} width={20} height={20} />)} onClick={loginWithGmail}>
+                    Login dengan akun google
+                  </Button>
+                  <div style={{margin:6}}>atau</div>
                   <TextField
                     size='small' 
                     label="Nomor Handphone" 
                     fullWidth 
-                    sx={{marginTop:1}}
                     value={hp}
                     inputMode='numeric'
                     onChange={setNumber}

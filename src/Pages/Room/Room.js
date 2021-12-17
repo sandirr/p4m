@@ -39,7 +39,7 @@ const Room = (props) => {
   return (
     <Fragment>
       <PageBase activePage="Area Mentor" pageTitle="Area Mentor" >
-        <div style={{height:'90%'}} id="jitsi-meeting-container" />
+        <div style={{height:'92%'}} id="jitsi-meeting-container" />
       </PageBase>
     </Fragment>
   );

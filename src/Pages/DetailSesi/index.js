@@ -1,8 +1,8 @@
 import { withStyles } from '@mui/styles';
 import { MediaQueries } from '../../Elements';
-import Home from './Home';
+import DetailSesi from './DetailSesi';
 import styles from './styles';
 
-const Styled = withStyles(styles)((MediaQueries('(max-width:900px)')(Home)));
+const Styled = withStyles(styles)((MediaQueries('(max-width:900px)')(DetailSesi)));
 
 export default Styled;

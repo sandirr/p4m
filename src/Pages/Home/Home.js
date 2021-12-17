@@ -20,6 +20,10 @@ export default class Home extends Component{
     this.setState({activeTab});
   };
 
+  _handleToDetail = (id) => () => {
+    this.props.history.push(`/detail-sesi/${id}`);
+  }
+
   render(){
     const {activeTab} = this.state;
     const {classes} = this.props;
@@ -74,7 +78,7 @@ export default class Home extends Component{
           </Grid>
           {[1,2,3,4,5,6,7,8,9].map(e=>(
             <Grid item lg={4} md={6} xs={12} xl={3} key={e}>
-              <Card className="card-item" >
+              <Card className="card-item" onClick={this._handleToDetail('apakah')} >
                 <CardActionArea>
                   <CardMedia
                     component="img"
@@ -129,10 +133,12 @@ const progressStyle ={
 Home.propTypes = {
   classes: PropTypes.object,
   children: PropTypes.node,
-  mediaQuery: PropTypes.bool
+  mediaQuery: PropTypes.bool,
+  history:PropTypes.object,
 };
   
 Home.defaultProps = {
   classes: {},
-  children: null
+  children: null,
+  history:{}
 };

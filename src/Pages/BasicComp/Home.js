@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {PageBase} from '../../Elements';
+import PropTypes from 'prop-types';
 
 export default class Home extends Component{
   render(){
@@ -10,3 +11,16 @@ export default class Home extends Component{
     );
   }
 }
+
+Home.propTypes = {
+  classes: PropTypes.object,
+  children: PropTypes.node,
+  mediaQuery: PropTypes.bool,
+  history:PropTypes.object,
+};
+  
+Home.defaultProps = {
+  classes: {},
+  children: null,
+  history:{}
+};

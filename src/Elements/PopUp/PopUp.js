@@ -12,14 +12,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function PopUp({classes, open, title, children, handleClose, handleNext, noCancel, agreeText, disagreeText, noNext}) {
+export default function PopUp({classes, backdropClose, open, title, children, handleClose, handleNext, noCancel, agreeText, disagreeText, noNext}) {
 
   return (
     <Dialog
       open={open}
       TransitionComponent={Transition}
       keepMounted
-      onClose={handleClose}
+      onClose={backdropClose ? handleClose : null}
       className={classes.root}
       fullWidth={true}
       maxWidth="xs"
@@ -51,6 +51,7 @@ PopUp.propTypes = {
   noNext: PropTypes.bool,
   agreeText: PropTypes.string,
   disagreeText: PropTypes.string,
+  backdropClose: PropTypes.bool,
 };
 
 PopUp.defaultProps = {
@@ -64,4 +65,5 @@ PopUp.defaultProps = {
   noNext: false,
   agreeText: 'Setuju',
   disagreeText: 'Batal',
+  backdropClose: true
 };

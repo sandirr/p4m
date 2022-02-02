@@ -1,10 +1,10 @@
 import Home from './Home';
-import Room from './Room';
+import Sesi from './Sesi';
 import DetailSesi from './DetailSesi';
 
 const pages = {
   Home,
-  Room,
+  Sesi,
   DetailSesi,
 };
 

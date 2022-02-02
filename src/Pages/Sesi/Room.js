@@ -11,7 +11,7 @@ const Room = (props) => {
   useEffect(()=>{
     fetchExternalApi('meet.jit.si').then(JitsiMeetExternalApi => {
       const api = new JitsiMeetExternalApi('meet.jit.si', {
-        roomName: 'Workshop Pentingnya Ngaji Alam',
+        roomName: 'WorkshopPentingnyaNgajiAlam',
         // height: 700,
         parentNode: document.getElementById('jitsi-meeting-container'),
         // SHOW_JITSI_WATERMARK: false,
@@ -28,7 +28,7 @@ const Room = (props) => {
         },
       });
 
-      api.executeCommand('avatarUrl', 'https://avatars0.githubusercontent.com/u/3671647');
+      // api.executeCommand('avatarUrl', 'https://avatars0.githubusercontent.com/u/3671647');
       api.addListener('videoConferenceLeft', ()=> {
         props.history.replace('/');
       });

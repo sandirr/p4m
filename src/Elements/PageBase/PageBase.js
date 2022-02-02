@@ -21,9 +21,10 @@ import PropTypes from 'prop-types';
 import ConfirmationModal from '../ConfirmationModal';
 import PopUp from '../PopUp';
 import { fAuth } from '../../Configs';
-import { RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, ConfirmationResult } from '@firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, ConfirmationResult, signInWithRedirect } from '@firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../Configs/firebase';
+import LengkapiData from '../LengkapiData';
 
 const drawerWidth = 260;
 
@@ -98,10 +99,15 @@ export default function PageBase(props) {
   const [otp, setOtp] = React.useState('');
   const [loadingVerif, setLoadingVerif] = React.useState('');
 
+  const [userData, setUserData] = React.useState(null);
+
   React.useEffect(()=>{
     fAuth.onAuthStateChanged(user=>{
-      if(user)setIsLogin(user);
-      else setIsLogin(null);
+      if(user){
+        setIsLogin(user);
+        checkUser(user);
+      } else setIsLogin(null);
+
       setPop('');
     });
   },[]);
@@ -171,7 +177,6 @@ export default function PageBase(props) {
     await window.confirmationResult.confirm(otp).then((result) => {
       // User signed in successfully.
       const user = result.user;
-      checkUser(user);
       // ...
     }).catch((error) => {
       // User couldn't sign in (bad verification code?)
@@ -184,38 +189,21 @@ export default function PageBase(props) {
 
   const loginWithGmail = async () =>{
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(fAuth, provider)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
+    await signInWithRedirect(fAuth, provider);
+  };
 
-        // const credential = GoogleAuthProvider.credentialFromResult(result);
-        // const token = credential.accessToken;
-
-        // The signed-in user info.
-        const user = result.user;
-        checkUser(user);
-        // ...
-        // handleRedirect();
-      }).catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        // const credential = GoogleAuthProvider.credentialFromError(error);
-        // ...
-      });
+  const openPop = (openFor) => () => {
+    setPop(openFor);
   };
 
   const checkUser = async (user) =>{
-    console.log('oi');
-    const userRef = doc(firestore, `users/${user.uid}`);
+    const userRef = doc(firestore, `users/${user.uid || fAuth.currentUser.uid}`);
     const userSnap = await getDoc(userRef);
     if(!userSnap.exists()){
-      alert('tambahin oi');
+      setPop('profil');
     }else{
-      console.log(userSnap.data());
+      setPop('');
+      setUserData(userSnap.data());
     }
   };
 
@@ -268,7 +256,7 @@ export default function PageBase(props) {
                     </div>
                   }
                   {isLogin &&
-                    <div style={{display:'flex', alignItems:'center', margin:'0 14px'}}>
+                    <div style={{display:'flex', alignItems:'center', margin:'0 14px'}} onClick={openPop('profil')}>
                       <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} src={isLogin.photoURL} ></Avatar>
                       {matches &&
                       <div style={{marginLeft:10}} >
@@ -430,6 +418,10 @@ export default function PageBase(props) {
             }
           </div>
           <div id="recaptcha-container"></div>
+        </PopUp>
+
+        <PopUp agreeText='Simpan &#38; Lanjutkan' noNext noCancel open={pop === 'profil'} title="Lengkapi Profil" disagreeText="Batal" >
+          <LengkapiData counterClose={()=>setPop('')} user={userData} counterSuccess={checkUser} />
         </PopUp>
       </Main>
     </Box>

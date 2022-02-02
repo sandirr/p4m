@@ -26,13 +26,6 @@ const styles ={
       fontWeight:'bold !important',
     },
   },
-  textareaChat:{
-    '& .MuiOutlinedInput-root.Mui-focused':{
-      '& .MuiOutlinedInput-notchedOutline':{
-        borderColor: `${Colors.success} !important`
-      },
-    },
-  },
   chatContainer:{
     display:'flex',
     flexDirection:'column',

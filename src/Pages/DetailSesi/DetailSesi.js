@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import {PageBase} from '../../Elements';
 import PropTypes from 'prop-types';
 import { Avatar, Button, Grid, IconButton, Paper, Rating, Tab, Tabs, TextField } from '@mui/material';
-import {AccessTimeRounded, AttachmentRounded, ChevronLeftRounded, GroupsRounded, SellRounded, SendRounded, TouchAppRounded} from '@mui/icons-material';
+import {AccessTimeRounded, AttachmentRounded, ChevronLeftRounded, GroupsRounded, LocationOn, SellRounded, SendRounded, TouchAppRounded} from '@mui/icons-material';
 import { Colors } from '../../Configs';
 
 export default class DetailSesi extends Component{
@@ -20,7 +20,7 @@ export default class DetailSesi extends Component{
   };
 
   _handlePayAndGet = () =>{
-    window.snap.pay('8494cb21-eda5-4fff-8836-1a4294fba644');
+    window.snap.pay('72fd0e49-d6e1-45fa-bba0-1858bd29170b');
   }
 
   render(){
@@ -60,11 +60,15 @@ export default class DetailSesi extends Component{
                     </div>
                     <div style={{display:'flex', gap:4, alignItems:'center', marginTop:8, color:Colors.grey80}}>
                       <GroupsRounded style={{fontSize:18}} />
-                      <span style={{fontSize:12}}>Maksimal 100 peserta<strong> (Reguler)</strong></span>
+                      <span style={{fontSize:12}}>Maksimal 100 peserta <strong>(Reguler)</strong></span>
                     </div>
                     <div style={{display:'flex', gap:4, alignItems:'center', color:Colors.grey80}}>
                       <TouchAppRounded style={{fontSize:18}} />
                       <span style={{fontSize:12}}>20 Orang telah bergabung</span>
+                    </div>
+                    <div style={{display:'flex', gap:4, alignItems:'center', color:Colors.grey80}}>
+                      <LocationOn style={{fontSize:18}} />
+                      <span style={{fontSize:12}}>Offline <strong>(Warkop Daeng Kumis Samata, Kabupaten GOWA)</strong></span>
                     </div>
                     <Button 
                       size='small' 

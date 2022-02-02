@@ -43,3 +43,7 @@
   top: 28px !important;
   z-index: 10;
 }
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline{
+  border-color: #229BD8 !important;
+}

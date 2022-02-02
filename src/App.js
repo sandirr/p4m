@@ -10,7 +10,8 @@ function App() {
       <Router>
         <Switch>
           <Route path={['/', '/beranda']} exact component={pages.Home} />
-          <Route path={['/area-mentor/:sesiId', '/sesi/:sesiId']} exact component={pages.Room} />
+          {/* <Route path='/lengkapi-data' exact component={pages.LengkapiData} /> */}
+          <Route path={['/area-mentor/:sesiId', '/sesi/:sesiId']} exact component={pages.Sesi} />
           <Route path='/detail-sesi/:sesiId' exact component={pages.DetailSesi} />
         </Switch>
       </Router>

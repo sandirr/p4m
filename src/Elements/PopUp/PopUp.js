@@ -12,7 +12,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function PopUp({classes, backdropClose, open, title, children, handleClose, handleNext, noCancel, agreeText, disagreeText, noNext}) {
+export default function PopUp({classes, backdropClose, open, title, children, handleClose, handleNext, noCancel, agreeText, disagreeText, noNext, maxWidth, ndButton, handleNdButton}) {
 
   return (
     <Dialog
@@ -22,7 +22,7 @@ export default function PopUp({classes, backdropClose, open, title, children, ha
       onClose={backdropClose ? handleClose : null}
       className={classes.root}
       fullWidth={true}
-      maxWidth="xs"
+      maxWidth={maxWidth}
     >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
@@ -31,6 +31,9 @@ export default function PopUp({classes, backdropClose, open, title, children, ha
       <DialogActions>
         {!noCancel &&
             <Button style={{color:Colors.primary, border:`1px solid ${Colors.primary}`, textTransform:'none'}} onClick={handleClose}>{disagreeText}</Button>
+        }
+        {Boolean(ndButton) &&
+          <Button style={{color:Colors.primary, border:`1px solid ${Colors.primary}`, textTransform:'none'}} onClick={handleNdButton}>{ndButton}</Button>
         }
         {!noNext &&
           <Button style={{color:Colors.white, backgroundColor:Colors.primary, textTransform:'none'}} onClick={handleNext}>{agreeText}</Button>
@@ -52,6 +55,9 @@ PopUp.propTypes = {
   agreeText: PropTypes.string,
   disagreeText: PropTypes.string,
   backdropClose: PropTypes.bool,
+  maxWidth: PropTypes.string,
+  ndButton: PropTypes.string,
+  handleNdButton: PropTypes.func,
 };
 
 PopUp.defaultProps = {
@@ -65,5 +71,8 @@ PopUp.defaultProps = {
   noNext: false,
   agreeText: 'Setuju',
   disagreeText: 'Batal',
-  backdropClose: true
+  backdropClose: true,
+  maxWidth: 'xs',
+  ndButton: '',
+  handleNdButton: null,
 };

@@ -2,10 +2,10 @@
 import React, {Component} from 'react';
 import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, IconButton, LinearProgress, linearProgressClasses, Badge } from '@mui/material';
 import { AccessTimeRounded, GroupsRounded, FilterListRounded } from '@mui/icons-material';
-import {PageBase} from '../../Elements';
 import PropTypes from 'prop-types';
 import { SearchRounded } from '@mui/icons-material';
 import { Colors } from '../../Configs';
+import { Fragment } from 'react';
 
 export default class Home extends Component{
 
@@ -21,14 +21,14 @@ export default class Home extends Component{
   };
 
   _handleToDetail = (id) => () => {
-    this.props.history.push(`/detail-sesi/${id}`);
+    this.props.history.push(`/beranda/${id}`);
   }
 
   render(){
     const {activeTab} = this.state;
     const {classes} = this.props;
     return(
-      <PageBase activePage="Beranda" pageTitle="Beranda" >
+      <Fragment>
         <Grid container spacing={2} alignItems="center" className={classes.root}>
           <Grid item lg={8} xs={12} className="sticky">
             <Paper className={classes.paperBar} >
@@ -76,7 +76,7 @@ export default class Home extends Component{
               />
             </Paper>
           </Grid>
-          {[1,2,3,4,5,6,7,8,9].map(e=>(
+          {[1,2,3,4,5,6,7,8].map(e=>(
             <Grid item lg={4} md={6} xs={12} xl={3} key={e}>
               <Card className="card-item" onClick={this._handleToDetail('apakah')} >
                 <CardActionArea>
@@ -113,7 +113,7 @@ export default class Home extends Component{
             </Grid>
           ))}
         </Grid>
-      </PageBase>
+      </Fragment>
     );
   }
 }

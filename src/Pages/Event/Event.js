@@ -4,7 +4,7 @@ import { fetchExternalApi } from '@jitsi/web-sdk';
 import { PageBase } from '../../Elements';
 import PropTypes from 'prop-types';
 
-const Room = (props) => {
+const Event = (props) => {
   // const apiRef = useRef();
   // const apiRefNew = useRef();
   
@@ -38,23 +38,21 @@ const Room = (props) => {
 
   return (
     <Fragment>
-      <PageBase activePage="Area Mentor" pageTitle="Area Mentor" >
-        <div style={{height:'92%'}} id="jitsi-meeting-container" />
-      </PageBase>
+      <div style={{height:'92%'}} id="jitsi-meeting-container" />
     </Fragment>
   );
 };
 
-export default Room;
+export default Event;
 
-Room.propTypes = {
+Event.propTypes = {
   classes: PropTypes.object,
   children: PropTypes.node,
   mediaQuery: PropTypes.bool,
   history: PropTypes.object,
 };
   
-Room.defaultProps = {
+Event.defaultProps = {
   classes: {},
   children: null,
   history: {}

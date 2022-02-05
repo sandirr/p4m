@@ -1,12 +1,11 @@
 /* eslint-disable react/prop-types */
-import React, {Component} from 'react';
-import {PageBase} from '../../Elements';
+import React, {Component, Fragment} from 'react';
 import PropTypes from 'prop-types';
 import { Avatar, Button, Grid, IconButton, Paper, Rating, Tab, Tabs, TextField } from '@mui/material';
 import {AccessTimeRounded, AttachmentRounded, ChevronLeftRounded, GroupsRounded, LocationOn, SellRounded, SendRounded, TouchAppRounded} from '@mui/icons-material';
 import { Colors } from '../../Configs';
 
-export default class DetailSesi extends Component{
+export default class EventDetails extends Component{
 
   constructor(props){
     super(props);
@@ -23,17 +22,21 @@ export default class DetailSesi extends Component{
     window.snap.pay('72fd0e49-d6e1-45fa-bba0-1858bd29170b');
   }
 
+  _handleGoBack = () => {
+    this.props.history.goBack();
+  }
+
   render(){
     const {classes} = this.props;
     const {activeTab} = this.state;
     return(
-      <PageBase pageTitle='Detail Sesi' activePage='Beranda' >
+      <Fragment>
         <Grid container spacing={2}>
           <Grid item md={8} xs={12}>
             <Paper className={classes.paperBar}>
               <div>
                 <div style={{display:'flex', alignItems:'center'}}>
-                  <IconButton>
+                  <IconButton onClick={this._handleGoBack}>
                     <ChevronLeftRounded htmlColor={Colors.black} fontSize='medium' />
                   </IconButton>
                   <h1 style={{fontSize:14}}>Workshop Pentingnya Belanja Kebutuhan Hidup</h1>
@@ -133,7 +136,7 @@ export default class DetailSesi extends Component{
                               <TextField 
                                 fullWidth
                                 size='small'
-                                autoCorrect={false}
+                                autoCorrect="false"
                                 className={classes.textareaChat}
                                 inputProps={{
                                   style: {
@@ -181,18 +184,18 @@ export default class DetailSesi extends Component{
             </Paper>
           </Grid>
         </Grid>
-      </PageBase>
+      </Fragment>
     );
   }
 }
 
-DetailSesi.propTypes = {
+EventDetails.propTypes = {
   classes: PropTypes.object,
   children: PropTypes.node,
   mediaQuery: PropTypes.bool
 };
   
-DetailSesi.defaultProps = {
+EventDetails.defaultProps = {
   classes: {},
   children: null
 };

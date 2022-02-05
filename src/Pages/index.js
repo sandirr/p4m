@@ -1,11 +1,13 @@
 import Home from './Home';
-import Sesi from './Sesi';
-import DetailSesi from './DetailSesi';
+import Event from './Event';
+import EventDetails from './EventDetails';
+import MentorArea from './MentorArea';
 
 const pages = {
   Home,
-  Sesi,
-  DetailSesi,
+  Event,
+  EventDetails,
+  MentorArea,
 };
 
 export default pages;

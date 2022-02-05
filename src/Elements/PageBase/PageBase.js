@@ -23,8 +23,11 @@ import PopUp from '../PopUp';
 import { fAuth } from '../../Configs';
 import { RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, ConfirmationResult, signInWithRedirect } from '@firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { firestore } from '../../Configs/firebase';
+import { firestore, storage } from '../../Configs/firebase';
 import LengkapiData from '../LengkapiData';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { useLocation } from 'react-router-dom';
+import { useRouteMatch } from 'react-router-dom';
 
 const drawerWidth = 260;
 
@@ -87,13 +90,12 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 export default function PageBase(props) {
-  const {classes, pageTitle, activePage} = props;
+  const {classes, pageTitle, activePage, userLogin} = props;
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.up('sm'));
   const history = useHistory();
   const [open, setOpen] = React.useState(matches);
   const [pop, setPop] = React.useState('');
-  const [isLogin,setIsLogin] = React.useState({});
 
   const [hp, setHp] = React.useState('');
   const [otp, setOtp] = React.useState('');
@@ -102,15 +104,10 @@ export default function PageBase(props) {
   const [userData, setUserData] = React.useState(null);
 
   React.useEffect(()=>{
-    fAuth.onAuthStateChanged(user=>{
-      if(user){
-        setIsLogin(user);
-        checkUser(user);
-      } else setIsLogin(null);
-
-      setPop('');
-    });
-  },[]);
+    if(userLogin)
+      checkUser(userLogin);
+    else setPop('');
+  },[userLogin]);
 
   const [loginWarning, setLoginWarning] = React.useState(true);
 
@@ -120,10 +117,6 @@ export default function PageBase(props) {
   },[matches]);
 
   const [scrollTarget] = React.useState(undefined); 
-
-  React.useEffect(()=>{
-    document.title = `${pageTitle}`;
-  },[pageTitle]);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -203,12 +196,25 @@ export default function PageBase(props) {
       setPop('profil');
     }else{
       setPop('');
-      setUserData(userSnap.data());
+      const userSnapData = userSnap.data();
+      const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
+      await getDownloadURL(fileRef)
+        .then(url=>{
+          userSnapData.photoUrl = url;
+          setUserData(userSnapData);
+        }).catch((err)=>{
+          alert(err.message);
+        });
     }
   };
 
+  const updateUser = (newData)=> {
+    setUserData(newData);
+    setPop('');
+  };
+
   const checkSign = () => {
-    if(isLogin){
+    if(userLogin){
       setPop('signout');
     }else{
       setLoginWarning(false);
@@ -242,39 +248,39 @@ export default function PageBase(props) {
                     {!open && <MenuRounded />} 
                   </IconButton>
                   {!open &&
-                    <img alt="p4m" src={Images.LOGO_FULL} width={150} height={36} />
+                    <img alt="p4m" src={Images.LOGO} width={40} height={40} />
                   }
                 </div>
               </Grid>
               <Grid item>
                 <div style={{display: 'flex', alignItems:'center'}}>
-                  {isLogin &&
+                  {userLogin &&
                     <div>
                       <IconButton id="sign-in-button">
                         <NotificationsRounded sx={{fontSize:20, color:Colors.black}} />
                       </IconButton>
                     </div>
                   }
-                  {isLogin &&
+                  {userLogin &&
                     <div style={{display:'flex', alignItems:'center', margin:'0 14px'}} onClick={openPop('profil')}>
-                      <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} src={isLogin.photoURL} ></Avatar>
+                      <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} src={userData?.photoUrl || userLogin?.photoURL} ></Avatar>
                       {matches &&
                       <div style={{marginLeft:10}} >
-                        <div style={{color:Colors.black, fontWeight:400}} >Andi Irsandi R.</div>
-                        <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >UIN Alauddin Makassar</div>
+                        <div style={{color:Colors.black, fontWeight:400}} >{userData?.fullName || userLogin?.displayName || ''}</div>
+                        <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >{userData?.university || userData?.status || ''}</div>
                       </div> 
                       }
                     </div>
                   }
                   <div>
                     <IconButton onClick={checkSign} >
-                      {isLogin ?
+                      {userLogin ?
                         <Logout sx={{fontSize:20, color:Colors.black}} style={{marginTop:-6}} /> 
                         :
                         <Login sx={{fontSize:20, color:Colors.black}} style={{marginTop:-6}} /> 
                       }
                     </IconButton>
-                    {isLogin ?
+                    {userLogin ?
                       <div style={{textAlign:'center', marginTop:-10, fontSize:8, color:'#000', fontWeight:'500'}}>Logout</div>
                       :
                       <div style={{textAlign:'center', marginTop:-10, fontSize:8, color:'#000', fontWeight:'500'}}>Login</div>
@@ -306,43 +312,43 @@ export default function PageBase(props) {
       >
         <Toolbar style={{boxShadow:`0px 1px 4px ${Colors.grey40}`, }}>
           <div style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
-            <img alt="p4m" src={Images.LOGO_FULL} width={166} height={40} />
+            <img alt="p4m" src={Images.LOGO} width={50} height={50} />
           </div>
         </Toolbar>
         <List style={{padding:'24px 10px 0'}}>
-          <ListItem onClick={changeRoute('beranda')} button className={activePage === 'Beranda' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('beranda')} button className={useRouteMatch(['/beranda', '/beranda/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <HomeRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Beranda" />
           </ListItem>
-          <ListItem onClick={changeRoute('area-mentor')} disabled={!isLogin} button className={activePage === 'Area Mentor' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('area-mentor')} disabled={!userLogin} button className={useRouteMatch(['/area-mentor', '/area-mentor/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <ImportantDevicesRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Area Mentor" />
           </ListItem>
           <Typography className={classes.listHead} >Sesi</Typography>
-          <ListItem onClick={changeRoute('sesi')} disabled={!isLogin} button className={activePage === 'Sesi Diikuti' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('event')} disabled={!userLogin} button className={useRouteMatch(['/event', '/event/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <GroupWork className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Sesi Diikuti" />
           </ListItem>
-          <ListItem onClick={changeRoute('pembayaran')} disabled={!isLogin} button className={activePage === 'Pembayaran' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('pembayaran')} disabled={!userLogin} button className={useRouteMatch(['/pembayaran', '/pembayaran/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <PaymentsRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Pembayaran" />
           </ListItem>
           <Typography className={classes.listHead}>P4M Care</Typography>
-          <ListItem onClick={changeRoute('bantuan')} button className={activePage === 'Bantuan' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('bantuan')} button className={useRouteMatch('/bantuan') ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <ErrorRounded className="list-icon" />
             </ListItemIcon>
             <ListItemText className="list-text" primary="Bantuan" />
           </ListItem>
-          <ListItem onClick={changeRoute('faq')}button className={activePage === 'FAQ' ? classes.listItemActive : classes.listItem}>
+          <ListItem onClick={changeRoute('faq')}button className={useRouteMatch('/faq') ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <HelpRounded className="list-icon" />
             </ListItemIcon>
@@ -365,7 +371,7 @@ export default function PageBase(props) {
       >
         <DrawerHeader />
         
-        <Snackbar anchorOrigin={{vertical:'bottom', horizontal:'center'}} open={loginWarning && !isLogin}>
+        <Snackbar anchorOrigin={{vertical:'bottom', horizontal:'center'}} open={loginWarning && !userLogin}>
           <Alert sx={{mb:2}} severity="warning" variant="filled" onClose={() => setLoginWarning(false)}>Yuk <strong style={{cursor:'pointer', textDecoration:'underline'}} onClick={checkSign}>login</strong>! Kamu perlu login agar bisa mengakses semua fitur</Alert>
         </Snackbar>
         {props.children}
@@ -421,7 +427,7 @@ export default function PageBase(props) {
         </PopUp>
 
         <PopUp agreeText='Simpan &#38; Lanjutkan' noNext noCancel open={pop === 'profil'} title="Lengkapi Profil" disagreeText="Batal" >
-          <LengkapiData counterClose={()=>setPop('')} user={userData} counterSuccess={checkUser} />
+          <LengkapiData counterClose={()=>setPop('')} user={userData} counterSuccess={updateUser} />
         </PopUp>
       </Main>
     </Box>

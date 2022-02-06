@@ -37,6 +37,8 @@ export default class Home extends Component{
       error:{
         rangeDate:[false, false],
       },
+
+      submitted:false
     };
 
     this._uniqueId = Date.now();
@@ -45,7 +47,7 @@ export default class Home extends Component{
 
   componentDidUpdate(prevProps, prevState){
     if(prevState.fields !== this.state.fields){
-      this.checkFieldsError;
+      this.checkFieldsError();
     }
   }
 
@@ -139,8 +141,18 @@ export default class Home extends Component{
     this.setState({snackBar:{severity:'', message:''}});
   }
 
+  _submitData = () => {
+    this.setState({submitted:true});
+  }
+
   render(){
-    const {activeTab, drawer, fields, error} = this.state;
+    const {activeTab, drawer, fields, submitted} = this.state;
+    let error = {
+      rangeDate: [false, false]
+    };
+    if(submitted){
+      error = this.state.error;
+    }
     const {eventTitle, eventCategories, eventPrice, eventClass, eventDetail, eventDiscuss, eventCover, rangeDate, time} = fields;
     const {classes} = this.props;
     return(
@@ -203,7 +215,7 @@ export default class Home extends Component{
           ))}
         </Grid>
 
-        <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" ndButton='Draft'>
+        <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" ndButton='Draft' handleNext={this._submitData}>
           <Grid container spacing={2}>
             <Grid item md={5} xs={12}>
               {eventCover ?
@@ -218,7 +230,10 @@ export default class Home extends Component{
                   <ImageRounded style={{fontSize:240}} htmlColor={Colors.grey50} />
                 </div>
               }
-              <div style={{textAlign:'center', fontSize:14}}>Rekomendasi rasio gambar 3:2</div>
+              {error.eventCover &&
+              <div style={{color:Colors.primary, textAlign:'center', fontSize:12, marginTop:4}}>Mohon tambahkan poster/gambar</div>
+              }
+              <div style={{textAlign:'center', fontSize:14, marginTop:4}}>Rekomendasi rasio gambar 3:2</div>
               <div style={{textAlign:'center', marginTop:10}}>
                 <IconButton onClick={this.handleSelectCover}><AddAPhotoRounded/></IconButton>
                 <IconButton onClick={this.handleDeleteCover}><Delete/></IconButton>
@@ -226,7 +241,7 @@ export default class Home extends Component{
             </Grid>
             <Grid item md={7} xs={12}>
               <input hidden type="file" ref={this.coverRef} onChange={this.onFilechange} />
-              <TextField error={error.eventTitle} name='eventTitle' onChange={this._handleChangeField} value={eventTitle} label="Judul Event" placeholder="Workshop Design Thinking" sx={{mt:1}} size='small' fullWidth InputLabelProps={{shrink: true }} />
+              <TextField helperText={error.eventTitle && <div style={{color:Colors.primary}}>Judul event wajib diisi</div>} name='eventTitle' onChange={this._handleChangeField} value={eventTitle} label="Judul Event" placeholder="Workshop Design Thinking" sx={{mt:1}} size='small' fullWidth InputLabelProps={{shrink: true }} />
               <Autocomplete
                 multiple
                 sx={{mt:2}}
@@ -244,7 +259,7 @@ export default class Home extends Component{
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    error={error.eventCategories}
+                    helperText={error.eventCategories && <div style={{color:Colors.primary}}>Pilih setidaknya satu kategori</div>}
                     label="Kategori"
                     InputLabelProps={{shrink: true }}
                     placeholder="Misalnya: Informatika"
@@ -264,9 +279,9 @@ export default class Home extends Component{
                   }}
                   renderInput={(startProps, endProps) => (
                     <React.Fragment>
-                      <TextField error={error.rangeDate[0]} InputLabelProps={{shrink: true }} fullWidth size="small" {...startProps} />
+                      <TextField helperText={(error.rangeDate[0] || error.rangeDate[1]) && <span style={{color:Colors.primary}}>Range tanggal wajib diisi</span>} InputLabelProps={{shrink: true }} fullWidth size="small" {...startProps} />
                       <Box sx={{ mx: 1 }}> - </Box>
-                      <TextField error={error.rangeDate[1]} InputLabelProps={{shrink: true }} fullWidth size="small" {...endProps} />
+                      <TextField InputLabelProps={{shrink: true }} fullWidth size="small" {...endProps} />
                     </React.Fragment>
                   )}
                 />
@@ -276,11 +291,23 @@ export default class Home extends Component{
                   onChange={(newValue) => {
                     this.setState({fields: {...this.state.fields, time:newValue}});
                   }}
-                  renderInput={(params) => <TextField error={error.time} placeholder='Jam:Menit' helperText={(<span>AM: 00.00 Malam - 11.59 Siang<br/>PM: 12.00 Siang - 11.59 Malam</span>)} sx={{mt:2}} InputLabelProps={{shrink: true }} fullWidth size="small" {...params} />}
+                  renderInput={(params) => 
+                    <TextField 
+                      placeholder='Jam:Menit' 
+                      helperText={(
+                        <div>
+                          {error.time && <div style={{color:Colors.primary}}>Waktu event wajib diisi</div>}
+                          <span>AM: 00.00 Malam - 11.59 Siang<br/>PM: 12.00 Siang - 11.59 Malam</span>
+                        </div>)} 
+                      sx={{mt:2}} 
+                      InputLabelProps={{shrink: true }} 
+                      fullWidth 
+                      size="small" 
+                      {...params} />}
                 />
               </LocalizationProvider>
 
-              <TextField error={error.eventClass} label="Kelas Event" name="eventClass" onChange={this._handleChangeField} value={eventClass} sx={{mt:2}} size='small' fullWidth InputLabelProps={{shrink: true }} select >
+              <TextField helperText={error.eventClass && <div style={{color:Colors.primary}}>Kelas event wajib diisi</div>} label="Kelas Event" name="eventClass" onChange={this._handleChangeField} value={eventClass} sx={{mt:2}} size='small' fullWidth InputLabelProps={{shrink: true }} select >
                 <MenuItem value={100}>Reguler (max. 100 orang)</MenuItem>
                 <MenuItem value={5}>VIP (private max. 5 orang)</MenuItem>
                 <MenuItem value={1}>VVIP (private 1 orang)</MenuItem>

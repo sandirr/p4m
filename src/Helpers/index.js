@@ -22,3 +22,19 @@ export const revParseMoney = (nom)=>{
     return parseInt(nom.toString().split('.').join(''));
   }else return null;
 };
+
+export function allFalse(obj)
+{
+  for(var o in obj)
+    if(obj[o]) return false;
+        
+  return true;
+}
+
+export function allTrue(obj)
+{
+  for(var o in obj)
+    if(!obj[o]) return false;
+        
+  return true;
+}

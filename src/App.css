@@ -47,3 +47,22 @@
 .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline{
   border-color: #229BD8 !important;
 }
+
+.no-data{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 38vh;
+}
+
+.no-data img{
+  width: 200px;
+  height: 200px;
+}
+
+.no-data .text-no-data{
+  font-size: 14px;
+  font-weight: 500;
+  color: #424242;
+}

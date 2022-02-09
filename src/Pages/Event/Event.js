@@ -3,36 +3,61 @@ import React, { useEffect, Fragment } from 'react';
 import { fetchExternalApi } from '@jitsi/web-sdk';
 import { PageBase } from '../../Elements';
 import PropTypes from 'prop-types';
+import { fAuth } from '../../Configs';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { firestore, storage } from '../../Configs/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Event = (props) => {
   // const apiRef = useRef();
   // const apiRefNew = useRef();
+  const {location} = props;
   
-  useEffect(()=>{
-    fetchExternalApi('meet.jit.si').then(JitsiMeetExternalApi => {
-      const api = new JitsiMeetExternalApi('meet.jit.si', {
-        roomName: 'WorkshopPentingnyaNgajiAlam',
-        // height: 700,
-        parentNode: document.getElementById('jitsi-meeting-container'),
-        // SHOW_JITSI_WATERMARK: false,
-        userInfo:{
-          displayName:'baco',
-        },
-        interfaceConfigOverwrite:{
-          SHOW_JITSI_WATERMARK:false,
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          VIDEO_LAYOUT_FIT: 'nocrop',
-        },
-        configOverwrite:{
-          startWithAudioMuted: true,
-        },
-      });
+  useEffect(async ()=>{
+    // console.log(location.state);
+    if(location.state?.eventId){
+      const event = location.state;
 
-      // api.executeCommand('avatarUrl', 'https://avatars0.githubusercontent.com/u/3671647');
-      api.addListener('videoConferenceLeft', ()=> {
-        props.history.replace('/');
+      let name = fAuth.currentUser?.displayName;
+      const userRef = doc(firestore, `users/${fAuth.currentUser.uid}`);
+      const userSnap = await getDoc(userRef);
+      if(userSnap.exists()){
+        name = userSnap.data().fullName;
+      }
+
+      await fetchExternalApi('meet.jit.si').then(async JitsiMeetExternalApi => {
+        const api = new JitsiMeetExternalApi('meet.jit.si', {
+          roomName: event.eventTitle,
+          // height: 700,
+          parentNode: document.getElementById('jitsi-meeting-container'),
+          // SHOW_JITSI_WATERMARK: false,
+          userInfo:{
+            displayName:name,
+          },
+          interfaceConfigOverwrite:{
+            SHOW_JITSI_WATERMARK:false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            VIDEO_LAYOUT_FIT: 'nocrop',
+          },
+          configOverwrite:{
+            startWithAudioMuted: true,
+          },
+        });
+  
+        let avatar = fAuth.currentUser?.photoURL;
+        const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
+        await getDownloadURL(fileRef)
+          .then(url=>{
+            avatar = url;
+          }).catch((err)=>{
+            alert(err.message);
+          });
+        // api.executeCommand('avatarUrl', avatar);
+        api.addListener('videoConferenceLeft', ()=> {
+          props.history.goBack();
+        });
       });
-    });
+    }else props.history.replace('/');
   },[]);
 
 
@@ -50,6 +75,7 @@ Event.propTypes = {
   children: PropTypes.node,
   mediaQuery: PropTypes.bool,
   history: PropTypes.object,
+  location: PropTypes.object,
 };
   
 Event.defaultProps = {

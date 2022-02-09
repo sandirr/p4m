@@ -1,17 +1,64 @@
 /* eslint-disable react/prop-types */
 import React, {Component, Fragment} from 'react';
 import PropTypes from 'prop-types';
-import { Avatar, Button, Grid, IconButton, Paper, Rating, Tab, Tabs, TextField } from '@mui/material';
-import {AccessTimeRounded, AttachmentRounded, ChevronLeftRounded, GroupsRounded, LocationOn, SellRounded, SendRounded, TouchAppRounded} from '@mui/icons-material';
+import { Avatar, Button, Grid, IconButton, Paper, Rating, Tab, Tabs } from '@mui/material';
+import {AccessTimeRounded, ChevronLeftRounded, GroupsRounded, LocationOn, SellRounded, TouchAppRounded} from '@mui/icons-material';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import moment from 'moment';
 import { Colors } from '../../Configs';
+import { firestore, fAuth, storage } from '../../Configs/firebase';
+import { parseMoney } from '../../Helpers';
+import { ChatSection } from '../../Elements';
+import { getDownloadURL, ref } from 'firebase/storage';
+import axios from 'axios';
 
 export default class EventDetails extends Component{
 
   constructor(props){
     super(props);
     this.state = {
-      activeTab:1
+      activeTab:1,
+      eventDetail:{},
+      mentorInfo:{}
     };
+  }
+
+  componentDidMount(){
+    this._getEventDetail();
+  }
+
+  _getEventDetail = async () => {
+    const {match} = this.props;
+    if(match.params.eventId){
+      const eventId = match.params.eventId;
+      onSnapshot(doc(firestore, 'events', eventId), async (snap)=>{
+        const eventDetail = snap.data();
+        this.setState({eventDetail});
+        const joined = eventDetail.joined || [];
+        const started = new Date(eventDetail.eventStarted.seconds * 1000);
+
+        const eventAlreadyStarted = started < new Date();
+
+        if(!joined.includes(fAuth.currentUser?.uid) && eventAlreadyStarted){
+          this.props.history.replace('/');
+        }
+
+        const mentorId = snap.data().uid;
+        const userRef = doc(firestore, `users/${mentorId}`);
+        const userSnap = await getDoc(userRef);
+        if(userSnap.exists()){
+          const userSnapData = userSnap.data();
+          const fileRef = ref(storage, `profile-picutre/${mentorId}`);
+          await getDownloadURL(fileRef)
+            .then(url=>{
+              userSnapData.photoUrl = url;
+              this.setState({mentorInfo: userSnapData});
+            }).catch((err)=>{
+              console.log(err);
+            });
+        }
+      });
+    }else this.props.history.replace('/');
   }
 
   _handleChangeTab = (e, activeTab) => {
@@ -19,15 +66,97 @@ export default class EventDetails extends Component{
   };
 
   _handlePayAndGet = () =>{
-    window.snap.pay('72fd0e49-d6e1-45fa-bba0-1858bd29170b');
+    const {eventDetail} = this.state;
+    const body = {
+      transaction_details: {
+        order_id: 'p4m-order-' + Date.now(),
+        gross_amount: eventDetail.eventPrice || 1000
+      },
+      credit_card: {
+        secure: true
+      },
+      item_details: [{
+        id: eventDetail.eventId,
+        price: eventDetail.eventPrice || 1000,
+        quantity: 1,
+        name: eventDetail.eventTitle,
+        brand: 'Midtrans',
+        category: 'Online Course',
+        merchant_name: 'P4M'
+      }],
+      custom_field1: fAuth.currentUser?.uid,
+      custom_field2: eventDetail.eventId,
+    };
+    
+
+    axios.post('https://p4m-api.vercel.app/api/make-payment', body)
+      .then(res=>{
+        // console.log(res.data);
+        window.snap.pay(res.data.token, {
+          // Optional
+          onSuccess: function(){
+            console.log('0i');
+          },
+          // Optional
+          onPending: function(){
+            console.log('0i');
+          },
+          // Optional
+          onError: function(){
+            console.log('0i');
+          }
+        });
+      })
+      .catch(err=>{
+        console.log(err);
+      });
   }
 
   _handleGoBack = () => {
     this.props.history.goBack();
   }
 
+  _renderClass = () => {
+    const {eventDetail} = this.state;
+    switch (eventDetail?.eventClass){
+    case 1 : return 'VVIP';
+    case 5 : return 'VIP';
+    case 100 : return 'Reguler';
+    default: return null;
+    }
+  }
+
+  _handleGoToMeet = () => {
+    const { eventDetail } = this.state;
+    if(eventDetail?.uid === fAuth.currentUser?.uid)
+      this.props.history.push(`/area-mentor/${eventDetail.eventId}/meet`, eventDetail);
+    else this.props.history.push(`/event/${eventDetail.eventId}/meet`, eventDetail);
+  }
+
+  _canGoMeet = () => {
+    const { eventDetail } = this.state;
+    const joined = eventDetail.joined || [];
+    if(eventDetail?.uid === fAuth.currentUser?.uid || joined.includes(fAuth.currentUser?.uid)){
+      return true;
+    }
+
+    return false;
+  }
+
+  _needJoin = () => {
+    const { eventDetail } = this.state;
+    const joined = eventDetail.joined || [];
+    const hasStocks = joined.length < eventDetail.eventClass;
+    if(eventDetail?.uid !== fAuth.currentUser?.uid && !joined.includes(fAuth.currentUser?.uid) && hasStocks){
+      return true;
+    }
+
+    return false;
+  }
+
   render(){
     const {classes} = this.props;
+    const {eventDetail, mentorInfo} = this.state;
     const {activeTab} = this.state;
     return(
       <Fragment>
@@ -39,13 +168,14 @@ export default class EventDetails extends Component{
                   <IconButton onClick={this._handleGoBack}>
                     <ChevronLeftRounded htmlColor={Colors.black} fontSize='medium' />
                   </IconButton>
-                  <h1 style={{fontSize:14}}>Workshop Pentingnya Belanja Kebutuhan Hidup</h1>
+                  <h1 style={{fontSize:14}}>{eventDetail?.eventTitle}</h1>
                 </div>
                 <Grid container spacing={2} style={{padding:'10px 20px 20px'}}>
                   <Grid item lg={5} xs={12}>
                     <img 
                       alt='cover' 
-                      src='https://mui.com/static/images/cards/contemplative-reptile.jpg' 
+                      loading="eager"
+                      src={eventDetail?.eventCover}
                       style={{
                         objectFit:'contain', 
                         width: '100%', 
@@ -55,40 +185,69 @@ export default class EventDetails extends Component{
                     />
                     <div style={{display:'flex', gap:4, alignItems:'center', marginBottom:4, color: Colors.info}}>
                       <AccessTimeRounded style={{fontSize:18}} />
-                      <span style={{fontSize:12}}>Kamis, 20 Agustus 2021</span>
+                      <span style={{fontSize:12}}>Mulai: {moment(eventDetail?.eventStarted?.seconds * 1000).format('dddd, Do MMMM YYYY')}</span>
+                    </div>
+                    <div style={{display:'flex', gap:4, alignItems:'center', marginBottom:4, color: Colors.info}}>
+                      <AccessTimeRounded style={{fontSize:18}} />
+                      <span style={{fontSize:12}}>Berakhir: {moment(eventDetail?.eventEnded?.seconds * 1000).format('dddd, Do MMMM YYYY')}</span>
                     </div>
                     <div style={{display:'flex', gap:4, alignItems:'center', marginBottom:4}}>
                       <SellRounded style={{fontSize:18}} />
-                      <span style={{fontSize:14, fontWeight:'bold'}}>Rp200.000</span>
+                      <span style={{fontSize:14, fontWeight:'bold'}}>{eventDetail?.eventPrice ? `Rp ${parseMoney(eventDetail?.eventPrice)}` : 'Gratis'}</span>
                     </div>
                     <div style={{display:'flex', gap:4, alignItems:'center', marginTop:8, color:Colors.grey80}}>
                       <GroupsRounded style={{fontSize:18}} />
-                      <span style={{fontSize:12}}>Maksimal 100 peserta <strong>(Reguler)</strong></span>
+                      <span style={{fontSize:12}}>Maksimal {eventDetail?.eventClass} peserta <strong>({this._renderClass()})</strong></span>
                     </div>
                     <div style={{display:'flex', gap:4, alignItems:'center', color:Colors.grey80}}>
                       <TouchAppRounded style={{fontSize:18}} />
-                      <span style={{fontSize:12}}>20 Orang telah bergabung</span>
+                      <span style={{fontSize:12}}>{eventDetail?.joined?.length || '0'} orang telah bergabung</span>
                     </div>
-                    <div style={{display:'flex', gap:4, alignItems:'center', color:Colors.grey80}}>
-                      <LocationOn style={{fontSize:18}} />
-                      <span style={{fontSize:12}}>Offline <strong>(Warkop Daeng Kumis Samata, Kabupaten GOWA)</strong></span>
-                    </div>
-                    <Button 
-                      size='small' 
-                      fullWidth 
-                      variant='contained' 
-                      sx={{
-                        background: Colors.primary,
-                        textTransform:'none',
-                        '&:hover':{
-                          background: Colors.primary_light,
-                        },
-                        mt:2
-                      }}
-                      onClick={this._handlePayAndGet}
-                    >
-                      Bergabung
-                    </Button>
+                    {eventDetail?.eventLocation &&
+                      <div style={{display:'flex', gap:4, alignItems:'center', color:Colors.grey80}}>
+                        <LocationOn style={{fontSize:18}} />
+                        <span style={{fontSize:12}}>{eventDetail?.eventLocation}</span>
+                      </div>
+                    }
+                    {fAuth.currentUser?.uid &&
+                    <>
+                      {this._canGoMeet() &&
+                      <Button 
+                        size='small' 
+                        fullWidth 
+                        variant='contained' 
+                        sx={{
+                          background: Colors.primary,
+                          textTransform:'none',
+                          '&:hover':{
+                            background: Colors.primary_light,
+                          },
+                          mt:2
+                        }}
+                        onClick={this._handleGoToMeet}
+                      >
+                        Link Meet
+                      </Button>
+                      }
+                      {this._needJoin() &&
+                      <Button 
+                        size='small' 
+                        fullWidth 
+                        variant='contained' 
+                        sx={{
+                          background: Colors.primary,
+                          textTransform:'none',
+                          '&:hover':{
+                            background: Colors.primary_light,
+                          },
+                          mt:2
+                        }}
+                        onClick={this._handlePayAndGet}
+                      >
+                        Bergabung
+                      </Button>
+                      }
+                    </>}
                   </Grid>
                   <Grid item lg={7} xs={12}>
                     <div style={{maxHeight:'70vh', overflow:'auto'}}>
@@ -107,50 +266,11 @@ export default class EventDetails extends Component{
                       <div style={{marginTop:10}}>
                         {activeTab === 0 &&
                           <div style={{fontSize:12}}>
-                            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry`s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-                            Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                            {eventDetail?.eventDetail || '-'}
                           </div>
                         }
-                        {activeTab === 1 &&
-                          <div className={classes.chatContainer}>
-                            <div className='chats'>
-                              <div className='left-chat'>
-                                <div className='user'>Andi Irsandi R (Mentor)</div>
-                                <div className='chat'>
-                                  Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                                </div>
-                                <div className='chat-time'>2 jam yang lalu</div>
-                              </div>
-                              <div className='right-chat'>
-                                <div className='user'>Sipaling tahu</div>
-                                <div className='chat'>
-                                  Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                                </div>
-                                <div className='chat-time'>2 jam yang lalu</div>
-                              </div>
-                            </div>
-                            <div className='chat-footer'>
-                              <IconButton>
-                                <AttachmentRounded/>
-                              </IconButton>
-                              <TextField 
-                                fullWidth
-                                size='small'
-                                autoCorrect="false"
-                                className={classes.textareaChat}
-                                inputProps={{
-                                  style: {
-                                    fontSize: 14,
-                                    height: 10,
-                                  }
-                                }}
-                              />
-                              <IconButton>
-                                <SendRounded/>
-                              </IconButton>
-                            </div>
-                          </div>
-                        }
+                        <ChatSection show={activeTab === 1} eventId={eventDetail.eventId} />
+                        
                       </div>
                     </div>
                   </Grid>
@@ -163,22 +283,24 @@ export default class EventDetails extends Component{
               <div style={{padding:'0 20px 10px'}}>
                 <h2 style={{fontSize:14}}>Tentang Mentor</h2>
                 <div style={{display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' }}>
-                  <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} ></Avatar>
+                  <Avatar sx={{backgroundColor:Colors.info_light, color:Colors.info, fontWeight:'bold'}} src={mentorInfo.photoUrl} ></Avatar>
                       
                   <div style={{marginTop:2, textAlign:'center'}} >
-                    <div style={{color:Colors.black, fontWeight:400, fontSize:14}} >Andi Irsandi R.</div>
-                    <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >UIN Alauddin Makassar</div>
-                    <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >(Mahasiswa)</div>
+                    <div style={{color:Colors.black, fontWeight:400, fontSize:14}} >{mentorInfo.fullName}</div>
+                    <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >{mentorInfo.university}</div>
+                    {mentorInfo.status &&
+                    <div style={{color:Colors.grey60, fontSize:12, marginTop:-5}} >({mentorInfo.status})</div>
+                    }
                   </div> 
                 </div>
 
                 <div style={{marginTop:4, textAlign:'center'}}>
-                  <Rating value={3} size="small" />
+                  <Rating value={4.5} size="small" readOnly />
                 </div>
 
                 <div style={{fontSize:12, fontWeight:'bold'}}>Deskripsi</div>
                 <div style={{fontSize:12, color:Colors.grey70, maxHeight:'52vh', overflow:'auto'}}>
-                  Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry`s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. 
+                  {mentorInfo.desc}
                 </div>
               </div>
             </Paper>

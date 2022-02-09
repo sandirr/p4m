@@ -38,3 +38,58 @@ export function allTrue(obj)
         
   return true;
 }
+
+export const userLib = {
+  data:{}
+};
+
+export function formattedDate(date, forNote) {
+  if (!date) return;
+
+  let months = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ];
+  let newDate = new Date(date);
+  const nowDate = new Date();
+
+  const elapsed = nowDate - newDate;
+
+  const msPerMinute = 1000 * 60;
+  const msPerHour = msPerMinute * 60;
+  const msPerDay = msPerHour * 24;
+  if (forNote) {
+    if (elapsed < msPerHour) {
+      if(Math.round(elapsed/msPerMinute) === 0) return 'Baru saja';
+      else return `${Math.round(elapsed/msPerMinute)} menit yang lalu`;
+    }
+
+    if (elapsed < msPerDay) {
+      return `${Math.round(elapsed/msPerHour)} jam yang lalu`;
+    }
+
+    if ((elapsed >= msPerDay) && (elapsed < (msPerDay * 2))) {
+      return 'Kemarin ' +
+        `${newDate.getHours()}:${newDate.getMinutes() < 10 ? '0' + newDate.getMinutes() : newDate.getMinutes()}`;
+    }
+
+    return `${newDate.getDate()} ` +
+      `${months[newDate.getMonth()].slice(0, 3)} ` +
+      `${newDate.getFullYear()} ` +
+      `${newDate.getHours()}:${newDate.getMinutes() < 10 ? '0' + newDate.getMinutes() : newDate.getMinutes()}`;
+  } else {
+    return `${newDate.getDate()} ${
+      months[newDate.getMonth()]
+    } ${newDate.getFullYear()}`;
+  }
+}

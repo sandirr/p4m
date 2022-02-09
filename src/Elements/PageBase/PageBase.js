@@ -28,6 +28,7 @@ import LengkapiData from '../LengkapiData';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { useLocation } from 'react-router-dom';
 import { useRouteMatch } from 'react-router-dom';
+import { userLib } from '../../Helpers';
 
 const drawerWidth = 260;
 
@@ -107,7 +108,7 @@ export default function PageBase(props) {
     if(userLogin)
       checkUser(userLogin);
     else setPop('');
-  },[userLogin]);
+  },[userLogin, fAuth.currentUser]);
 
   const [loginWarning, setLoginWarning] = React.useState(true);
 
@@ -203,8 +204,9 @@ export default function PageBase(props) {
           userSnapData.photoUrl = url;
           setUserData(userSnapData);
         }).catch((err)=>{
-          alert(err.message);
+          // console.log(err.message);
         });
+      userLib.data = userSnapData;
     }
   };
 
@@ -225,6 +227,7 @@ export default function PageBase(props) {
   const handleLogout = () =>{
     signOut(fAuth).then(()=>{
       console.log('success logout');
+      userLib.data = {};
     }).catch(err=>{
       alert(err.message);
     });
@@ -328,12 +331,12 @@ export default function PageBase(props) {
             </ListItemIcon>
             <ListItemText className="list-text" primary="Area Mentor" />
           </ListItem>
-          <Typography className={classes.listHead} >Sesi</Typography>
+          <Typography className={classes.listHead} >Event</Typography>
           <ListItem onClick={changeRoute('event')} disabled={!userLogin} button className={useRouteMatch(['/event', '/event/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>
               <GroupWork className="list-icon" />
             </ListItemIcon>
-            <ListItemText className="list-text" primary="Sesi Diikuti" />
+            <ListItemText className="list-text" primary="Event Diikuti" />
           </ListItem>
           <ListItem onClick={changeRoute('pembayaran')} disabled={!userLogin} button className={useRouteMatch(['/pembayaran', '/pembayaran/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>

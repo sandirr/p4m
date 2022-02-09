@@ -30,7 +30,8 @@ const styles = () => ({
       },
       '& .price':{
         fontWeight:'500',
-        fontSize:14
+        fontSize:14,
+        color: Colors.info
       },
       '& .event-date':{
         color: Colors.info,

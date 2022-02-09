@@ -6,14 +6,35 @@ import PropTypes from 'prop-types';
 import { SearchRounded } from '@mui/icons-material';
 import { Colors } from '../../Configs';
 import { Fragment } from 'react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { firestore } from '../../Configs/firebase';
+import moment from 'moment';
+import { parseMoney } from '../../Helpers';
 
 export default class Home extends Component{
 
   constructor(props){
     super(props);
     this.state = {
-      activeTab:0
+      activeTab:0,
+      events:[]
     };
+  }
+
+  componentDidMount(){
+    this._getEventsEvents();
+  }
+
+  _getEventsEvents = () => {
+    // console.log(fAuth.currentUser?.uid);
+    const q = query(collection(firestore, 'events'));
+    onSnapshot(q, (querySnapshot) => {
+      const data = [];
+      querySnapshot.forEach((doc) => {
+        data.push({...doc.data(), eventId: doc.id});
+      });
+      this.setState({events: data});
+    });
   }
 
   _handleChangeTab = (e, activeTab) => {
@@ -25,7 +46,7 @@ export default class Home extends Component{
   }
 
   render(){
-    const {activeTab} = this.state;
+    const {activeTab, events} = this.state;
     const {classes} = this.props;
     return(
       <Fragment>
@@ -76,37 +97,37 @@ export default class Home extends Component{
               />
             </Paper>
           </Grid>
-          {[1,2,3,4,5,6,7,8].map(e=>(
-            <Grid item lg={4} md={6} xs={12} xl={3} key={e}>
-              <Card className="card-item" onClick={this._handleToDetail('apakah')} >
-                <CardActionArea>
+          {events.map(e=>(
+            <Grid item lg={4} md={6} xs={12} xl={3} key={e.eventCover}>
+              <Card className="card-item" >
+                <CardActionArea onClick={this._handleToDetail(e.eventId)}>
                   <CardMedia
                     component="img"
                     height="150"
-                    image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
+                    image={e.eventCover}
                     alt="green iguana"
                   />
-                  <div className="category" >Teknologi</div>
+                  <div className="category" >{e.eventCategories[0]}</div>
                   <CardContent>
                     <Typography variant="body2" className="event-date">
                       <AccessTimeRounded className="desc-icon" />
                       <span>
-                      Kamis, 20 Agustus 2021
+                        {moment(e.rangeDate[0].seconds * 1000).format('dddd, Do MMMM YYYY')}
                       </span>
                     </Typography>
-                    <Typography variant="body2" className="event-title">
-                    Workshop Peningkatan Kompetensi Guru dalam Membuat Media Pembelajaran Berbasis IT
+                    <Typography variant="body1" className="event-title">
+                      {e.eventTitle}
                     </Typography>
                     <Typography variant="body1" className="price">
-                    Rp200.000
+                      {e.eventPrice ? `Rp ${parseMoney(e.eventPrice)}` : 'Gratis'}
                     </Typography>
-                    <Typography variant="body2" className="joined">
+                    <div variant="body2" className="joined">
                       <GroupsRounded className="desc-icon" />
                       <div style={{width:'100%'}}>
-                        <LinearProgress sx={progressStyle} variant="determinate" value={12/25 * 100} />
+                        <LinearProgress sx={progressStyle} variant="determinate" value={(e.joined?.length || 0)/e.eventClass * 100} />
                       </div>
-                      <span className="participants" >12/25</span>
-                    </Typography>
+                      <span className="participants" >{(e.joined?.length||0)}/{e.eventClass}</span>
+                    </div>
                   </CardContent>
                 </CardActionArea>
               </Card>

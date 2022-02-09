@@ -1,23 +1,27 @@
 /* eslint-disable no-unused-vars */
 import React, {Component, createRef} from 'react';
-import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, IconButton, LinearProgress, linearProgressClasses, Badge, Button, Autocomplete, Chip, Box, MenuItem, FormControlLabel, Switch, Snackbar, Alert } from '@mui/material';
-import { AccessTimeRounded, GroupsRounded, FilterListRounded } from '@mui/icons-material';
+import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, IconButton, LinearProgress, linearProgressClasses, Badge, Button, Autocomplete, Chip, Box, MenuItem, FormControlLabel, Switch, Snackbar, Alert, CardActions } from '@mui/material';
+import { AccessTimeRounded, GroupsRounded } from '@mui/icons-material';
 import PropTypes from 'prop-types';
-import { SearchRounded, Delete, ImageRounded, AddAPhotoRounded } from '@mui/icons-material';
+import { Delete, ImageRounded, AddAPhotoRounded } from '@mui/icons-material';
 import { LocalizationProvider, MobileDateRangePicker, TimePicker } from '@mui/lab';
 import DateAdapter from '@mui/lab/AdapterDateFns';
 import { Colors, Science, fAuth } from '../../Configs';
 import { Fragment } from 'react';
 import {PopUp} from '../../Elements';
-import { parseMoney } from '../../Helpers';
-import {storage} from '../../Configs/firebase';
+import { allFalse, parseMoney, revParseMoney } from '../../Helpers';
+import {firestore, storage} from '../../Configs/firebase';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { collection, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import moment from 'moment';
 
 export default class Home extends Component{
 
   constructor(props){
     super(props);
     this.state = {
+      events:[],
+
       activeTab:0,
       drawer: '',
 
@@ -31,17 +35,23 @@ export default class Home extends Component{
         eventDetail:'',
         eventDiscuss: true,
         eventCover:'',
+        eventLocation:'',
       },
 
       snackBar:{},
       error:{
-        rangeDate:[false, false],
+        rangeDate:true,
+        time:true,
+        eventTitle:true,
+        eventCategories:true,
+        eventClass:true,
+        eventCover:true,
       },
 
       submitted:false
     };
 
-    this._uniqueId = Date.now();
+    this._uniqueId = `p4m-${Date.now()}`;
     this.coverRef = createRef(null);
   }
 
@@ -51,11 +61,27 @@ export default class Home extends Component{
     }
   }
 
+  componentDidMount(){
+    this._getMyEvents();
+  }
+
+  _getMyEvents = () => {
+    // console.log(fAuth.currentUser?.uid);
+    const q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid));
+    onSnapshot(q, (querySnapshot) => {
+      const data = [];
+      querySnapshot.forEach((doc) => {
+        data.push({...doc.data(), eventId: doc.id});
+      });
+      this.setState({events: data});
+    });
+  }
+
   checkFieldsError = () => {
     const {eventTitle, eventCategories, eventClass, eventCover, rangeDate, time} = this.state.fields; 
     this.setState({
       error:{
-        rangeDate:[!rangeDate[0], !rangeDate[1]],
+        rangeDate:!rangeDate[0] || !rangeDate[1],
         time:!time,
         eventTitle:!eventTitle,
         eventCategories:!eventCategories?.length,
@@ -69,7 +95,7 @@ export default class Home extends Component{
     this.coverRef.current.click();
   }
 
-  handleSelectCover = () => {
+  handleDeleteCover = () => {
     this.setState({fields: {...this.state.fields, eventCover:''}});
   }
 
@@ -92,15 +118,42 @@ export default class Home extends Component{
   };
 
   _handleToDetail = (id) => () => {
-    this.props.history.push(`/beranda/${id}`);
+    this.props.history.push(`/area-mentor/${id}`);
   }
 
-  _handleOpenDrawer = (drawer) => () => {
+  _handleOpenDrawer = (drawer, event) => () => {
+    if(event){
+      this._uniqueId = event.eventId;
+      this.setState({
+        fields:{
+          ...event,
+          time: new Date(event.time.seconds * 1000),
+          rangeDate: [new Date(event.rangeDate[0].seconds * 1000), new Date(event.rangeDate[1].seconds * 1000)]
+        }
+      });
+    }else{
+      this._uniqueId = `p4m-${Date.now()}`;
+    }
     this.setState({drawer});
   }
 
   _handleCloseDrawer = () => {
-    this.setState({drawer:''});
+    this.setState({
+      drawer:'',
+      fields:{
+        rangeDate:[null,null],
+        time:null,
+        eventTitle:'',
+        eventCategories:[],
+        eventPrice:0,
+        eventClass:'',
+        eventDetail:'',
+        eventDiscuss: true,
+        eventCover:'',
+        eventLocation:''
+      },
+      submitted: false
+    });
   }
 
   onFilechange = async ( e ) => {
@@ -141,19 +194,39 @@ export default class Home extends Component{
     this.setState({snackBar:{severity:'', message:''}});
   }
 
-  _submitData = () => {
+  _submitData = (e) => {
+    e.preventDefault();
     this.setState({submitted:true});
+    if(allFalse(this.state.error)){
+      const eventRef = doc(firestore, `events/${this._uniqueId}`);
+      const body = {
+        ...this.state.fields,
+        uid: fAuth.currentUser.uid,
+        eventId: this._uniqueId,
+        status: 'publish',
+        eventPrice: revParseMoney(this.state.fields.eventPrice),
+        eventStarted: this.state.fields.rangeDate[0],
+        eventEnded: this.state.fields.rangeDate[1],
+      };
+      setDoc(eventRef, body)
+        .then(()=>{
+          this.setState({
+            snackBar:{message: `Sukses ${this.state.drawer?.toLowerCase()}`, severity:'success'},
+          }, this._handleCloseDrawer);
+        })
+        .catch(err=>{
+          this.setState({snackBar:{message: err.message, severity:'error'}});
+        });
+    }
   }
 
   render(){
-    const {activeTab, drawer, fields, submitted} = this.state;
-    let error = {
-      rangeDate: [false, false]
-    };
+    const {activeTab, drawer, fields, submitted, events} = this.state;
+    let error = {};
     if(submitted){
       error = this.state.error;
     }
-    const {eventTitle, eventCategories, eventPrice, eventClass, eventDetail, eventDiscuss, eventCover, rangeDate, time} = fields;
+    const {eventTitle, eventCategories, eventPrice, eventClass, eventDetail, eventDiscuss, eventCover, rangeDate, time, eventLocation} = fields;
     const {classes} = this.props;
     return(
       <Fragment>
@@ -170,52 +243,60 @@ export default class Home extends Component{
                 <Tab className="tab" label="Semua" />
                 <Tab className="tab" label="Event Aktif" />
                 <Tab className="tab" label="Event Selesai" />
-                <Tab className="tab" label="Draft" />
+                {/* <Tab className="tab" label="Draft" /> */}
               </Tabs>
             </Paper>
           </Grid>
           <Grid item xs={12} md={3} alignItems='flex-end' justifyContent='flex-end'>
             <Button fullWidth className='create-btn' onClick={this._handleOpenDrawer('Buat Event')} >+ Buat Event</Button>
           </Grid>
-          {[1,2].map(e=>(
-            <Grid item lg={4} md={6} xs={12} xl={3} key={e}>
-              <Card className="card-item" onClick={this._handleToDetail('apakah')} >
-                <CardActionArea>
+          {events.map(e=>(
+            <Grid item lg={4} md={6} xs={12} xl={3} key={e.eventCover}>
+              <Card className="card-item" >
+                <CardActionArea onClick={this._handleToDetail(e.eventId)}>
                   <CardMedia
                     component="img"
                     height="150"
-                    image="https://mui.com/static/images/cards/contemplative-reptile.jpg"
+                    image={e.eventCover}
                     alt="green iguana"
                   />
-                  <div className="category" >Teknologi</div>
+                  <div className="category" >{e.eventCategories[0]}</div>
                   <CardContent>
                     <Typography variant="body2" className="event-date">
                       <AccessTimeRounded className="desc-icon" />
                       <span>
-                      Kamis, 20 Agustus 2021
+                        {moment(e.rangeDate[0].seconds * 1000).format('dddd, Do MMMM YYYY')}
                       </span>
                     </Typography>
-                    <Typography variant="body2" className="event-title">
-                    Workshop Peningkatan Kompetensi Guru dalam Membuat Media Pembelajaran Berbasis IT
+                    <Typography variant="body1" className="event-title">
+                      {e.eventTitle}
                     </Typography>
                     <Typography variant="body1" className="price">
-                    Rp200.000
+                      {e.eventPrice ? `Rp ${parseMoney(e.eventPrice)}` : 'Gratis'}
                     </Typography>
-                    <Typography variant="body2" className="joined">
+                    <div variant="body2" className="joined">
                       <GroupsRounded className="desc-icon" />
                       <div style={{width:'100%'}}>
-                        <LinearProgress sx={progressStyle} variant="determinate" value={12/25 * 100} />
+                        <LinearProgress sx={progressStyle} variant="determinate" value={(e.joined?.length || 0)/e.eventClass * 100} />
                       </div>
-                      <span className="participants" >12/25</span>
-                    </Typography>
+                      <span className="participants" >{(e.joined?.length||0)}/{e.eventClass}</span>
+                    </div>
                   </CardContent>
                 </CardActionArea>
+                <CardActions>
+                  <Button size="small" color="primary" sx={{textTransform:'none'}} onClick={this._handleOpenDrawer('Edit Event', e)}>
+                    Edit
+                  </Button>
+                  <Button size="small" sx={{textTransform:'none', color:Colors.primary}}>
+                    Batalkan
+                  </Button>
+                </CardActions>
               </Card>
             </Grid>
           ))}
         </Grid>
 
-        <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" ndButton='Draft' handleNext={this._submitData}>
+        <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" handleNext={this._submitData}>
           <Grid container spacing={2}>
             <Grid item md={5} xs={12}>
               {eventCover ?
@@ -279,7 +360,7 @@ export default class Home extends Component{
                   }}
                   renderInput={(startProps, endProps) => (
                     <React.Fragment>
-                      <TextField helperText={(error.rangeDate[0] || error.rangeDate[1]) && <span style={{color:Colors.primary}}>Range tanggal wajib diisi</span>} InputLabelProps={{shrink: true }} fullWidth size="small" {...startProps} />
+                      <TextField helperText={error.rangeDate && <span style={{color:Colors.primary}}>Range tanggal wajib diisi</span>} InputLabelProps={{shrink: true }} fullWidth size="small" {...startProps} />
                       <Box sx={{ mx: 1 }}> - </Box>
                       <TextField InputLabelProps={{shrink: true }} fullWidth size="small" {...endProps} />
                     </React.Fragment>
@@ -312,6 +393,8 @@ export default class Home extends Component{
                 <MenuItem value={5}>VIP (private max. 5 orang)</MenuItem>
                 <MenuItem value={1}>VVIP (private 1 orang)</MenuItem>
               </TextField>
+
+              <TextField label="Lokasi (Jika offline/hybrid)" name='eventLocation' onChange={this._handleChangeField} value={eventLocation} InputLabelProps={{shrink: true }} sx={{mt:2}} size='small' fullWidth />
 
               <TextField label="Detail Event" name='eventDetail' onChange={this._handleChangeField} value={eventDetail} sx={{mt:2}} fullWidth InputLabelProps={{shrink: true }} multiline rows={2} />
 

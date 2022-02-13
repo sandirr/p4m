@@ -32,7 +32,9 @@ function App() {
 
               <Route path={['/', '/beranda']} exact component={pages.Home} />
               <Route path={'/area-mentor'} exact component={pages.MentorArea} />
-              <Route path={['/area-mentor/:eventId/meet', '/event/:eventId/meet']} exact component={pages.Event} />
+              <Route path={'/event'} exact component={pages.JoinedEvent} />
+              <Route path={'/pembayaran'} exact component={pages.Payment} />
+              <Route path={['/area-mentor/:eventId/meet', '/event/:eventId/meet']} exact component={pages.JitsiMeet} />
               <Route path={['/beranda/:eventId', '/area-mentor/:eventId', '/event/:eventId']} exact component={pages.EventDetails} />
 
             </Switch>

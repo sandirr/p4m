@@ -22,7 +22,7 @@ export default class Home extends Component{
     this.state = {
       events:[],
 
-      activeTab:0,
+      activeTab:'',
       drawer: '',
 
       fields:{
@@ -207,6 +207,8 @@ export default class Home extends Component{
         eventPrice: revParseMoney(this.state.fields.eventPrice),
         eventStarted: this.state.fields.rangeDate[0],
         eventEnded: this.state.fields.rangeDate[1],
+        createdAt: this.state.fields.createdAt || Date.now(),
+        updatedAt: Date.now(),
       };
       setDoc(eventRef, body)
         .then(()=>{
@@ -240,9 +242,9 @@ export default class Home extends Component{
                 className={classes.tabs}
                 variant="scrollable"
                 scrollButtons="auto">
-                <Tab className="tab" label="Semua" />
-                <Tab className="tab" label="Event Aktif" />
-                <Tab className="tab" label="Event Selesai" />
+                <Tab className="tab" value="" label="Semua" />
+                <Tab className="tab" value="active" label="Event Aktif" />
+                <Tab className="tab" value="done" label="Event Selesai" />
                 {/* <Tab className="tab" label="Draft" /> */}
               </Tabs>
             </Paper>

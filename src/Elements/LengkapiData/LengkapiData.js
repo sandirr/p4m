@@ -38,7 +38,7 @@ export default class LengkapiData extends Component{
         }
       }
       this.setState({
-        fields: userData
+        fields: {...userData, email: userData.email || fAuth.currentUser?.email}
       });
     }
   }
@@ -157,6 +157,20 @@ export default class LengkapiData extends Component{
               size="small"
               value={fields.status}
               name='status'
+              onChange={this.handleChangeFields}
+              required
+              fullWidth 
+            />
+            <TextField 
+              InputLabelProps={{
+                shrink: true,
+              }} 
+              label="Email" 
+              placeholder='contoh@mail.id'
+              size="small"
+              value={fields.email}
+              type='email'
+              name='email'
               onChange={this.handleChangeFields}
               required
               fullWidth 

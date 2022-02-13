@@ -1,17 +1,16 @@
-/* eslint-disable no-unused-vars */
 import React, {Component} from 'react';
-import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, IconButton, LinearProgress, linearProgressClasses, Badge } from '@mui/material';
-import { AccessTimeRounded, GroupsRounded, FilterListRounded } from '@mui/icons-material';
+import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, LinearProgress, linearProgressClasses } from '@mui/material';
+import { AccessTimeRounded, GroupsRounded } from '@mui/icons-material';
 import PropTypes from 'prop-types';
 import { SearchRounded } from '@mui/icons-material';
-import { Colors, Science } from '../../Configs';
+import { Colors } from '../../Configs';
 import { Fragment } from 'react';
-import { collection, endAt, onSnapshot, orderBy, query, startAt, where } from 'firebase/firestore';
-import { firestore } from '../../Configs/firebase';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { firestore, fAuth } from '../../Configs/firebase';
 import moment from 'moment';
 import { parseMoney } from '../../Helpers';
 
-export default class Home extends Component{
+export default class JoinedEvent extends Component{
 
   constructor(props){
     super(props);
@@ -27,16 +26,17 @@ export default class Home extends Component{
   }
 
   _getEventsEvents = () => {
-    // console.log(fAuth.currentUser?.uid);
+    const {activeTab} = this.state;
     const now = new Date();
-    const q = query(
-      collection(firestore, 'events'),
-      where('eventStarted', '>', now),
-      where('eventCategories', 'array-contains-any', this.state.activeTab ? [this.state.activeTab] : Science),
-      // orderBy('eventTitle'),
-      // startAt(this.state.serachTerm),
-      // endAt(this.state.serachTerm + '\uf8ff')
-    );
+    let q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid));
+    
+    if(activeTab === 'active')
+      q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid), where('eventStarted', '>', now));
+    else if(activeTab === 'done')
+      q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid), where('eventEnded', '<', now));
+    else
+      q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid));
+
     onSnapshot(q, (querySnapshot) => {
       const data = [];
       querySnapshot.forEach((doc) => {
@@ -58,7 +58,7 @@ export default class Home extends Component{
   }
 
   _handleToDetail = (id) => () => {
-    this.props.history.push(`/beranda/${id}`);
+    this.props.history.push(`/event/${id}`);
   }
 
   render(){
@@ -77,9 +77,9 @@ export default class Home extends Component{
                 variant="scrollable"
                 scrollButtons="auto">
                 <Tab className="tab" value="" label="Semua" />
-                {Science.map(option=>(
-                  <Tab className="tab" label={option} key={option} value={option} />
-                ))}
+                <Tab className="tab" value="active" label="Event Aktif" />
+                <Tab className="tab" value="done" label="Event Selesai" />
+                {/* <Tab className="tab" label="Draft" /> */}
               </Tabs>
             </Paper>
           </Grid>
@@ -163,14 +163,14 @@ const progressStyle ={
   },
 };
 
-Home.propTypes = {
+JoinedEvent.propTypes = {
   classes: PropTypes.object,
   children: PropTypes.node,
   mediaQuery: PropTypes.bool,
   history:PropTypes.object,
 };
   
-Home.defaultProps = {
+JoinedEvent.defaultProps = {
   classes: {},
   children: null,
   history:{}

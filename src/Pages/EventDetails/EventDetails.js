@@ -7,7 +7,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import moment from 'moment';
 import { Colors } from '../../Configs';
 import { firestore, fAuth, storage } from '../../Configs/firebase';
-import { parseMoney } from '../../Helpers';
+import { parseMoney, userLib } from '../../Helpers';
 import { ChatSection } from '../../Elements';
 import { getDownloadURL, ref } from 'firebase/storage';
 import axios from 'axios';
@@ -19,7 +19,8 @@ export default class EventDetails extends Component{
     this.state = {
       activeTab:1,
       eventDetail:{},
-      mentorInfo:{}
+      mentorInfo:{},
+      disabledDiscuss: false,
     };
   }
 
@@ -33,13 +34,23 @@ export default class EventDetails extends Component{
       const eventId = match.params.eventId;
       onSnapshot(doc(firestore, 'events', eventId), async (snap)=>{
         const eventDetail = snap.data();
-        this.setState({eventDetail});
+
+        const setDiscuss = () => {
+          if(!eventDetail.eventDiscuss){
+            this.setState({
+              disabledDiscuss:true,
+              activeTab:0
+            });
+          }
+        };
+
+        this.setState({eventDetail}, setDiscuss());
         const joined = eventDetail.joined || [];
         const started = new Date(eventDetail.eventStarted.seconds * 1000);
 
         const eventAlreadyStarted = started < new Date();
 
-        if(!joined.includes(fAuth.currentUser?.uid) && eventAlreadyStarted){
+        if(!joined.includes(fAuth.currentUser?.uid) && eventAlreadyStarted && fAuth.currentUser?.uid !== eventDetail.uid){
           this.props.history.replace('/');
         }
 
@@ -52,10 +63,11 @@ export default class EventDetails extends Component{
           await getDownloadURL(fileRef)
             .then(url=>{
               userSnapData.photoUrl = url;
-              this.setState({mentorInfo: userSnapData});
             }).catch((err)=>{
               console.log(err);
             });
+          
+          this.setState({mentorInfo: userSnapData});
         }
       });
     }else this.props.history.replace('/');
@@ -84,6 +96,11 @@ export default class EventDetails extends Component{
         category: 'Online Course',
         merchant_name: 'P4M'
       }],
+      customer_details:{
+        first_name:userLib.data.fullName,
+        last_name: '',
+        email: userLib.data.email || fAuth.currentUser?.email,
+      },
       custom_field1: fAuth.currentUser?.uid,
       custom_field2: eventDetail.eventId,
     };
@@ -95,11 +112,11 @@ export default class EventDetails extends Component{
         window.snap.pay(res.data.token, {
           // Optional
           onSuccess: function(){
-            console.log('0i');
+            this.props.history.replace('/pembayaran');
           },
           // Optional
           onPending: function(){
-            console.log('0i');
+            this.props.history.replace('/pembayaran');
           },
           // Optional
           onError: function(){
@@ -156,7 +173,7 @@ export default class EventDetails extends Component{
 
   render(){
     const {classes} = this.props;
-    const {eventDetail, mentorInfo} = this.state;
+    const {eventDetail, mentorInfo, disabledDiscuss} = this.state;
     const {activeTab} = this.state;
     return(
       <Fragment>
@@ -260,8 +277,8 @@ export default class EventDetails extends Component{
                           },
                         }}
                         className={classes.tabs}>
-                        <Tab className="tab" label="Detail Kegiatan" />
-                        <Tab className="tab" label="Diskusi" />
+                        <Tab value={0} className="tab" label="Detail Kegiatan" />
+                        <Tab value={1} className="tab" label="Diskusi" disabled={disabledDiscuss} />
                       </Tabs>
                       <div style={{marginTop:10}}>
                         {activeTab === 0 &&

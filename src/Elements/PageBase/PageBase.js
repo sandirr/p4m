@@ -202,16 +202,17 @@ export default function PageBase(props) {
       await getDownloadURL(fileRef)
         .then(url=>{
           userSnapData.photoUrl = url;
-          setUserData(userSnapData);
         }).catch((err)=>{
-          // console.log(err.message);
+          console.log(err.message);
         });
+      setUserData(userSnapData);
       userLib.data = userSnapData;
     }
   };
 
   const updateUser = (newData)=> {
     setUserData(newData);
+    userLib.data = newData;
     setPop('');
   };
 
@@ -226,8 +227,9 @@ export default function PageBase(props) {
 
   const handleLogout = () =>{
     signOut(fAuth).then(()=>{
-      console.log('success logout');
+      // console.log('success logout');
       userLib.data = {};
+      history.replace('/beranda');
     }).catch(err=>{
       alert(err.message);
     });

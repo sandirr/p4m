@@ -33,6 +33,25 @@ export default class Payment extends Component{
     this.props.history.push(`/beranda/${idEvent}`);
   }
 
+  _renderStatus = (payment) => {
+    if(payment.transaction_status === 'pending')
+      return(
+        <Chip variant='outlined' label='Menunggu Pembayaran' size="small" color='warning' />
+      );
+    else if(payment.transaction_status === 'settlement')
+      return(
+        <Chip variant='outlined' label='Pembayaran Berhasil' size="small" color='success' />
+      );
+    else if(payment.transaction_status === 'expire')
+      return(
+        <Chip variant='outlined' label='Kadaluarsa' size="small" color='error' />
+      );
+    else
+      return(
+        <Chip variant='outlined' label={payment.transaction_status} size="small" color='error' />
+      );
+  }
+
   render(){
     const {payments} = this.state;
     const {classes} = this.props;
@@ -50,7 +69,7 @@ export default class Payment extends Component{
           {payments.map(payment=>(
             <Paper elevation={0} key={payment.transaction_id} sx={{position:'relative'}}>
               <div style={{position:'absolute', top:-12, left:8}}>
-                <Chip variant='outlined' label={payment.transaction_status === 'pending' ? 'Menunggu Pembayaran' : 'Pembayaran Berhasil'} size="small" color={payment.transaction_status === 'pending' ? 'warning' : 'success'} />
+                {this._renderStatus(payment)}
               </div>
               <Grid container spacing={1} alignItems="center">
                 <Grid item lg={3} xs={12} md={6}>

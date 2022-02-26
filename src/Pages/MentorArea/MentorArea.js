@@ -12,7 +12,7 @@ import {PopUp} from '../../Elements';
 import { allFalse, parseMoney, revParseMoney } from '../../Helpers';
 import {firestore, storage} from '../../Configs/firebase';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { collection, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, setDoc, where, orderBy } from 'firebase/firestore';
 import moment from 'moment';
 
 export default class Home extends Component{
@@ -66,8 +66,17 @@ export default class Home extends Component{
   }
 
   _getMyEvents = () => {
-    // console.log(fAuth.currentUser?.uid);
-    const q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid));
+    const {activeTab} = this.state;
+    const now = new Date();
+    let q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid));
+    
+    if(activeTab === 'active')
+      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('eventEnded', '>=', now), orderBy('eventEnded', 'desc'));
+    else if(activeTab === 'done')
+      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('eventEnded', '<', now), orderBy('eventEnded', 'desc'));
+    else
+      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid));
+
     onSnapshot(q, (querySnapshot) => {
       const data = [];
       querySnapshot.forEach((doc) => {
@@ -114,7 +123,7 @@ export default class Home extends Component{
   }
 
   _handleChangeTab = (e, activeTab) => {
-    this.setState({activeTab});
+    this.setState({activeTab}, this._getMyEvents);
   };
 
   _handleToDetail = (id) => () => {
@@ -267,7 +276,7 @@ export default class Home extends Component{
                     <Typography variant="body2" className="event-date">
                       <AccessTimeRounded className="desc-icon" />
                       <span>
-                        {moment(e.rangeDate[0].seconds * 1000).format('dddd, Do MMMM YYYY')}
+                        {moment(e.eventStarted.seconds * 1000).format('dddd, Do MMMM YYYY')}
                       </span>
                     </Typography>
                     <Typography variant="body1" className="event-title">

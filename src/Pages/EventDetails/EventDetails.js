@@ -35,6 +35,17 @@ export default class EventDetails extends Component{
       onSnapshot(doc(firestore, 'events', eventId), async (snap)=>{
         const eventDetail = snap.data();
 
+        const joined = eventDetail.joined || [];
+        const started = new Date(eventDetail.eventStarted.seconds * 1000);
+
+        const eventAlreadyStarted = started < new Date();
+        const isAdmin = fAuth.currentUser?.uid === eventDetail.uid;
+        const joinedEvent = joined.includes(fAuth.currentUser?.uid);
+
+        if(!joinedEvent && eventAlreadyStarted && !isAdmin){
+          this.props.history.replace('/');
+        }
+  
         const setDiscuss = () => {
           if(!eventDetail.eventDiscuss){
             this.setState({
@@ -45,14 +56,6 @@ export default class EventDetails extends Component{
         };
 
         this.setState({eventDetail}, setDiscuss());
-        const joined = eventDetail.joined || [];
-        const started = new Date(eventDetail.eventStarted.seconds * 1000);
-
-        const eventAlreadyStarted = started < new Date();
-
-        if(!joined.includes(fAuth.currentUser?.uid) && eventAlreadyStarted && fAuth.currentUser?.uid !== eventDetail.uid){
-          this.props.history.replace('/');
-        }
 
         const mentorId = snap.data().uid;
         const userRef = doc(firestore, `users/${mentorId}`);

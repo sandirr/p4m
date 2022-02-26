@@ -124,7 +124,7 @@ export default class Home extends Component{
                     <Typography variant="body2" className="event-date">
                       <AccessTimeRounded className="desc-icon" />
                       <span>
-                        {moment(e.rangeDate[0].seconds * 1000).format('dddd, Do MMMM YYYY')}
+                        {moment(e.eventStarted.seconds * 1000).format('dddd, Do MMMM YYYY')}
                       </span>
                     </Typography>
                     <Typography variant="body1" className="event-title">

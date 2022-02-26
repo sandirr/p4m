@@ -31,7 +31,7 @@ export default class JoinedEvent extends Component{
     let q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid));
     
     if(activeTab === 'active')
-      q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid), where('eventStarted', '>', now));
+      q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid), where('eventEnded', '>=', now));
     else if(activeTab === 'done')
       q = query(collection(firestore, 'events'), where('joined', 'array-contains', fAuth.currentUser?.uid), where('eventEnded', '<', now));
     else
@@ -124,7 +124,7 @@ export default class JoinedEvent extends Component{
                     <Typography variant="body2" className="event-date">
                       <AccessTimeRounded className="desc-icon" />
                       <span>
-                        {moment(e.rangeDate[0].seconds * 1000).format('dddd, Do MMMM YYYY')}
+                        {moment(e.eventStarted.seconds * 1000).format('dddd, Do MMMM YYYY')}
                       </span>
                     </Typography>
                     <Typography variant="body1" className="event-title">

@@ -53,12 +53,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 38vh;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .no-data img{
-  width: 200px;
-  height: 200px;
+  width: 160px;
+  height: 160px;
 }
 
 .no-data .text-no-data{

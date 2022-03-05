@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 import React, {Component, createRef} from 'react';
 import { Card, CardActionArea, CardContent, CardMedia, Grid, Paper, Tab, Tabs, TextField, Typography, IconButton, LinearProgress, linearProgressClasses, Badge, Button, Autocomplete, Chip, Box, MenuItem, FormControlLabel, Switch, Snackbar, Alert, CardActions } from '@mui/material';
-import { AccessTimeRounded, GroupsRounded } from '@mui/icons-material';
+import { AccessTimeRounded, Check, GroupsRounded, SearchRounded } from '@mui/icons-material';
 import PropTypes from 'prop-types';
-import { Delete, ImageRounded, AddAPhotoRounded, Check } from '@mui/icons-material';
+import { Delete, ImageRounded, AddAPhotoRounded } from '@mui/icons-material';
 import { LocalizationProvider, MobileDateRangePicker, TimePicker } from '@mui/lab';
 import DateAdapter from '@mui/lab/AdapterDateFns';
 import { Colors, Science, fAuth } from '../../Configs';
@@ -15,7 +15,7 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { collection, doc, onSnapshot, query, setDoc, where, orderBy, deleteDoc, updateDoc } from 'firebase/firestore';
 import moment from 'moment';
 
-export default class Home extends Component{
+export default class AdminArea extends Component{
 
   constructor(props){
     super(props);
@@ -24,6 +24,7 @@ export default class Home extends Component{
 
       activeTab:'',
       drawer: '',
+      searchTerm:'',
 
       fields:{
         rangeDate:[null,null],
@@ -49,7 +50,8 @@ export default class Home extends Component{
       },
 
       submitted:false,
-      prepareToDelete: null,
+      prepareToTakeDown: null,
+      prepareToPublish: null,
     };
 
     this._uniqueId = `p4m-${Date.now()}`;
@@ -69,21 +71,24 @@ export default class Home extends Component{
   _getMyEvents = () => {
     const {activeTab} = this.state;
     const now = new Date();
-    let q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'));
+    let q = query(collection(firestore, 'events'), where('status', '==', 'publish'));
     
     if(activeTab === 'active')
-      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'), where('eventEnded', '>=', now), orderBy('eventEnded', 'desc'));
+      q = query(collection(firestore, 'events'), where('status', '==', 'publish'), where('eventEnded', '>=', now), orderBy('eventEnded', 'desc'));
     else if(activeTab === 'done')
-      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'), where('eventEnded', '<', now), orderBy('eventEnded', 'desc'));
+      q = query(collection(firestore, 'events'), where('status', '==', 'publish'), where('eventEnded', '<', now), orderBy('eventEnded', 'desc'));
     else if(activeTab === 'take_down')
-      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'take_down'));
+      q = query(collection(firestore, 'events'), where('status', '==', 'take_down'));
     else
-      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'));
+      q = query(collection(firestore, 'events'), where('status', '==', 'publish'));
 
     onSnapshot(q, (querySnapshot) => {
       const data = [];
       querySnapshot.forEach((doc) => {
-        data.push({...doc.data(), eventId: doc.id});
+        const docData = doc.data();
+        const matchSearch = docData.eventTitle.toLowerCase().match(this.state.searchTerm.toLowerCase());
+        if(matchSearch)
+          data.push({...docData, eventId: doc.id});
       });
       this.setState({events: data});
     });
@@ -129,8 +134,12 @@ export default class Home extends Component{
     this.setState({activeTab}, this._getMyEvents);
   };
 
+  _handleSearchEvents = (e) => {
+    this.setState({searchTerm: e.target.value}, this._getMyEvents);
+  }
+
   _handleToDetail = (id) => () => {
-    this.props.history.push(`/area-mentor/${id}`);
+    this.props.history.push(`/area-admin/${id}`);
   }
 
   _handleOpenDrawer = (drawer, event) => () => {
@@ -234,38 +243,71 @@ export default class Home extends Component{
     }
   }
 
-  _handlePrepareToDelete = (id) => () => {
-    this.setState({prepareToDelete:id});
+  _handlePrepareToTakeDown = (id) => () => {
+    this.setState({prepareToTakeDown:id});
   }
 
-  _handleCancel = () => {
-    updateDoc(doc(firestore, `events/${this.state.prepareToDelete}`), {status:'deleted'})
+  _handlePrepareToPublish = (id) => () => {
+    this.setState({prepareToPublish:id});
+  }
+
+  _handleTakeDown = () => {
+    updateDoc(doc(firestore, `events/${this.state.prepareToTakeDown}`), {
+      status:'take_down',
+      updatedAt: Date.now(),
+    })
       .then(()=>{
         this.setState({
-          snackBar:{message: 'Sukses menghapus event', severity:'success'},
-          prepareToDelete:null
+          snackBar:{message: 'Sukses take down event', severity:'success'},
+          prepareToTakeDown:null
         });
       })
       .catch(err=>{
-        this.setState({snackBar:{message: err.message, severity:'error'}, prepareToDelete:null});
+        this.setState({snackBar:{message: err.message, severity:'error'}, prepareToTakeDown:null});
+      });
+  }
+
+  _handlePublish = () => {
+    updateDoc(doc(firestore, `events/${this.state.prepareToPublish}`), {
+      status:'publish',
+      updatedAt: Date.now(),
+    })
+      .then(()=>{
+        this.setState({
+          snackBar:{message: 'Sukses publish event', severity:'success'},
+          prepareToPublish:null
+        });
+      })
+      .catch(err=>{
+        this.setState({snackBar:{message: err.message, severity:'error'}, prepareToPublish:null});
       });
   }
 
   _renderActionByStatus = (event) => {
-    const joined = event.joined?.length;
-    const started = new Date(event.eventStarted.seconds * 1000);
-    const eventAlreadyStarted = started < new Date();
+    const joined = event.joined?.length || 0;
+    const ended = new Date(event.eventEnded.seconds * 1000);
+    const eventAlreadyEnded = ended < new Date();
 
-    if (!joined && !eventAlreadyStarted){
+    if(this.state.activeTab === 'take_down' && !eventAlreadyEnded){
       return(
-        <Button size="small" sx={{textTransform:'none', color:Colors.primary}} onClick={this._handlePrepareToDelete(event.eventId)}>
-          Batalkan
+        <Button size="small" sx={{textTransform:'none'}} onClick={this._handlePrepareToPublish(event.eventId)}>
+          Publish
+        </Button>
+      );
+    }
+    else if (!eventAlreadyEnded){
+      return(
+        <Button size="small" sx={{textTransform:'none', color:Colors.primary}} onClick={this._handlePrepareToTakeDown(event.eventId)}>
+          Take Down
         </Button>
       );
     } else if(this.state.activeTab === 'done'){
       return(
         <div style={{fontSize:14}}>
-          Penghasilan Rp {(event.eventPrice * joined) || 0}
+          Penghasilan Rp {(event.eventPrice ? parseMoney(event.eventPrice * joined) : '0')}
+          {event.transferUrl &&
+            <span> (Lunas)</span>
+          }
         </div>
       );
     }
@@ -274,17 +316,17 @@ export default class Home extends Component{
   }
 
   render(){
-    const {activeTab, drawer, fields, submitted, events, prepareToDelete} = this.state;
+    const {activeTab, drawer, fields, submitted, events, prepareToTakeDown, prepareToPublish} = this.state;
     let error = {};
     if(submitted){
       error = this.state.error;
     }
-    const {eventTitle, eventCategories, eventPrice, eventClass, eventDetail, eventDiscuss, eventCover, rangeDate, time, eventLocation} = fields;
+    const {eventTitle, eventCategories, eventPrice, eventClass, eventDetail, eventDiscuss, eventCover, rangeDate, time, eventLocation, searchTerm} = fields;
     const {classes} = this.props;
     return(
       <Fragment>
         <Grid container spacing={2} alignItems="center" className={classes.root} >
-          <Grid item xs={12} md={9}>
+          <Grid item xs={12} md={8}>
             <Paper className={classes.paperBar} >
               <Tabs 
                 value={activeTab} 
@@ -301,8 +343,31 @@ export default class Home extends Component{
               </Tabs>
             </Paper>
           </Grid>
-          <Grid item xs={12} md={3} alignItems='flex-end' justifyContent='flex-end'>
-            <Button fullWidth className='create-btn' onClick={this._handleOpenDrawer('Buat Event')} >+ Buat Event</Button>
+          <Grid item lg={4} xs={12} className="sticky">
+            <Paper className={classes.paperBar}>
+              <TextField 
+                placeholder="Cari kursus membuat website" 
+                size="small" 
+                variant="outlined"
+                value={searchTerm}
+                onChange={this._handleSearchEvents}
+                fullWidth
+                sx={{padding:'3px 0'}}
+                InputProps={{
+                  startAdornment:(
+                    <SearchRounded sx={{marginRight:1, color: Colors.primary}} />
+                  ),
+                  // endAdornment:(
+                  //   <IconButton>
+                  //     <Badge color="error" variant="dot">
+                  //       <FilterListRounded sx={{color: Colors.primary}} />
+                  //     </Badge>
+                  //   </IconButton>
+                  // ),
+                  classes:{notchedOutline:classes.noBorder}
+                }}
+              />
+            </Paper>
           </Grid>
           {events.map(e=>(
             <Grid item lg={4} md={6} xs={12} xl={3} key={e.eventCover}>
@@ -338,11 +403,9 @@ export default class Home extends Component{
                   </CardContent>
                 </CardActionArea>
                 <CardActions>
-                  {e.status !== 'take_down' &&
-                  <Button size="small" color="primary" sx={{textTransform:'none'}} onClick={this._handleOpenDrawer('Edit Event', e)}>
+                  {/* <Button size="small" color="primary" sx={{textTransform:'none'}} onClick={this._handleOpenDrawer('Edit Event', e)}>
                     Edit
-                  </Button>
-                  }
+                  </Button> */}
                   {this._renderActionByStatus(e)}
                   
                 </CardActions>
@@ -351,7 +414,8 @@ export default class Home extends Component{
           ))}
         </Grid>
 
-        <ConfirmationModal open={Boolean(prepareToDelete)} title="Hapus Event" desc='Yakin ingin menghapus event? event yang sudah dihapus tidak dapat dipulihkan!' handleAgree={this._handleCancel} handleClose={this._handlePrepareToDelete(null)} agreeText='Hapus' />
+        <ConfirmationModal open={Boolean(prepareToTakeDown)} title="Hapus Event" desc='Yakin ingin take down event?' handleAgree={this._handleTakeDown} handleClose={this._handlePrepareToTakeDown(null)} agreeText='Take Down' />
+        <ConfirmationModal open={Boolean(prepareToPublish)} title="Publish Event" desc='Yakin ingin publish event?' handleAgree={this._handlePublish} handleClose={this._handlePrepareToPublish(null)} agreeText='Publish' />
         
         <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" handleNext={this._submitData}>
           <Grid container spacing={2}>
@@ -489,14 +553,14 @@ const progressStyle ={
   },
 };
 
-Home.propTypes = {
+AdminArea.propTypes = {
   classes: PropTypes.object,
   children: PropTypes.node,
   mediaQuery: PropTypes.bool,
   history:PropTypes.object,
 };
   
-Home.defaultProps = {
+AdminArea.defaultProps = {
   classes: {},
   children: null,
   history:{}

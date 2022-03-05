@@ -25,7 +25,7 @@ const Event = (props) => {
         name = userSnap.data().fullName;
       }
 
-      await fetchExternalApi('meet.jit.si').then(async JitsiMeetExternalApi => {
+      await fetchExternalApi('meet.jit.si').then(JitsiMeetExternalApi => {
         const api = new JitsiMeetExternalApi('meet.jit.si', {
           roomName: event.eventTitle,
           // height: 700,
@@ -44,17 +44,19 @@ const Event = (props) => {
           },
         });
   
-        let avatar = fAuth.currentUser?.photoURL;
-        const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
-        await getDownloadURL(fileRef)
-          .then(url=>{
-            avatar = url;
-          }).catch((err)=>{
-            alert(err.message);
-          });
-        // api.executeCommand('avatarUrl', avatar);
         api.addListener('videoConferenceLeft', ()=> {
           props.history.goBack();
+        });
+        api.addListener('videoConferenceJoined',async ()=>{
+          let avatar = fAuth.currentUser?.photoURL;
+          const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
+          await getDownloadURL(fileRef)
+            .then(url=>{
+              avatar = url;
+            }).catch((err)=>{
+              console.log(err.message);
+            });
+          api.executeCommand('avatarUrl', avatar);
         });
       });
     }else props.history.replace('/');

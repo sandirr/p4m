@@ -14,7 +14,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {useHistory} from 'react-router-dom';
-import { ChevronLeftRounded, ErrorRounded, Google, GroupWork, HelpRounded, HomeRounded, ImportantDevicesRounded, Login, Logout, MenuRounded, NotificationsRounded, PaymentsRounded, SendRounded } from '@mui/icons-material';
+import { AdminPanelSettings, ChevronLeftRounded, ErrorRounded, Google, GroupWork, HelpRounded, HomeRounded, ImportantDevicesRounded, Login, Logout, MenuRounded, NotificationsRounded, PaymentsRounded, SendRounded } from '@mui/icons-material';
 import {Colors, Images} from '../../Configs';
 import { Alert, Avatar, Button, Grid, Slide, Snackbar, TextField, Typography, useScrollTrigger, CircularProgress } from '@mui/material';
 import PropTypes from 'prop-types';
@@ -91,7 +91,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 export default function PageBase(props) {
-  const {classes, pageTitle, activePage, userLogin} = props;
+  const {classes, pageTitle, activePage, userLogin, admin} = props;
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.up('sm'));
   const history = useHistory();
@@ -333,6 +333,14 @@ export default function PageBase(props) {
             </ListItemIcon>
             <ListItemText className="list-text" primary="Area Mentor" />
           </ListItem>
+          {admin &&
+          <ListItem onClick={changeRoute('area-admin')} disabled={!userLogin} button className={useRouteMatch(['/area-admin', '/area-admin/:eventId']) ? classes.listItemActive : classes.listItem}>
+            <ListItemIcon>
+              <AdminPanelSettings className="list-icon" />
+            </ListItemIcon>
+            <ListItemText className="list-text" primary="Area Admin" />
+          </ListItem>
+          }
           <Typography className={classes.listHead} >Event</Typography>
           <ListItem onClick={changeRoute('event')} disabled={!userLogin} button className={useRouteMatch(['/event', '/event/:eventId']) ? classes.listItemActive : classes.listItem}>
             <ListItemIcon>

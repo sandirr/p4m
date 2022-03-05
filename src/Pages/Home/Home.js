@@ -33,6 +33,7 @@ export default class Home extends Component{
       collection(firestore, 'events'),
       where('eventStarted', '>', now),
       where('eventCategories', 'array-contains-any', this.state.activeTab ? [this.state.activeTab] : Science),
+      where('status', '==', 'publish')
       // orderBy('eventTitle'),
       // startAt(this.state.serachTerm),
       // endAt(this.state.serachTerm + '\uf8ff')

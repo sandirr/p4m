@@ -58,35 +58,37 @@ export default class LengkapiData extends Component{
   onFilechange = async ( e ) => {
     /*Selected files data can be collected here.*/
     const file = e.target.files[0];
-
-    const acceptedExt = ['png', 'jpg', 'jpeg', 'gif'];
-    const fileExt = file.name.split('.').reverse()[0];
-    
-    if(!acceptedExt.includes(fileExt?.toLowerCase())){
-      this.setState({snackBar:{message: 'Maaf, Anda hanya diperbolehkan mengunggah file gambar', severity:'error'}});
-      return;
+    if(file){
+      const acceptedExt = ['png', 'jpg', 'jpeg', 'gif'];
+      const fileExt = file.name.split('.').reverse()[0];
+      
+      if(!acceptedExt.includes(fileExt?.toLowerCase())){
+        this.setState({snackBar:{message: 'Maaf, Anda hanya diperbolehkan mengunggah file gambar', severity:'error'}});
+        return;
+      }
+  
+      const fileSize = file.size;
+      if(fileSize > (1000 * 1000)){
+        this.setState({snackBar:{message: 'Maaf, ukuran maksimal file adalah 1MB', severity:'error'}});
+        return;
+      }
+  
+      this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'success'}});
+      const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
+      await uploadBytes(fileRef, file)
+        .then(async()=>{
+          await getDownloadURL(fileRef)
+            .then(url=>{
+              this.setState({fields: {...this.state.fields, photoUrl: url}, snackBar:{message: 'Berhasil mengubah foto profil', severity:'success'}});
+            }).catch((err)=>{
+              this.setState({snackBar:{message: err.message, severity:'error'}});
+            });
+        })
+        .catch((err)=>{
+          this.setState({snackBar:{message: 'Gagal mengubah foto profil', severity:'error'}});
+        });
     }
 
-    const fileSize = file.size;
-    if(fileSize > (1000 * 1000)){
-      this.setState({snackBar:{message: 'Maaf, ukuran maksimal file adalah 1MB', severity:'error'}});
-      return;
-    }
-
-    this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'success'}});
-    const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
-    await uploadBytes(fileRef, file)
-      .then(async()=>{
-        await getDownloadURL(fileRef)
-          .then(url=>{
-            this.setState({fields: {...this.state.fields, photoUrl: url}, snackBar:{message: 'Berhasil mengubah foto profil', severity:'success'}});
-          }).catch((err)=>{
-            this.setState({snackBar:{message: err.message, severity:'error'}});
-          });
-      })
-      .catch((err)=>{
-        this.setState({snackBar:{message: 'Gagal mengubah foto profil', severity:'error'}});
-      });
   }
 
   handleLogout = () => {

@@ -4,6 +4,7 @@ import { collection, onSnapshot, query } from 'firebase/firestore';
 import { Paper, Box, Grid, Button, Chip } from '@mui/material';
 import { firestore, fAuth } from '../../Configs/firebase';
 import { Colors } from '../../Configs';
+import moment from 'moment';
 // import { parseMoney } from '../../Helpers';
 
 export default class Payment extends Component{
@@ -52,6 +53,24 @@ export default class Payment extends Component{
       );
   }
 
+  _renderInfo = (token) => () => {
+    if(token)
+      window.snap.pay(token, {
+        // Optional
+        onSuccess: function(){
+          // history.replace('/pembayaran');
+        },
+        // Optional
+        onPending: function(){
+          // history.replace('/pembayaran');
+        },
+        // Optional
+        onError: function(){
+          console.log('0i');
+        }
+      });
+  }
+
   render(){
     const {payments} = this.state;
     const {classes} = this.props;
@@ -66,25 +85,29 @@ export default class Payment extends Component{
           }}
           className={classes.root}
         >
-          {payments.map(payment=>(
+          {payments.map(payment=> payment.transaction_id && (
             <Paper elevation={0} key={payment.transaction_id} sx={{position:'relative'}}>
               <div style={{position:'absolute', top:-12, left:8}}>
                 {this._renderStatus(payment)}
               </div>
-              <Grid container spacing={1} alignItems="center">
-                <Grid item lg={3} xs={12} md={6}>
+              <Grid container spacing={1} alignItems="center" justifyContent='space-between'>
+                <Grid item lg={2} xs={12} md={6}>
                   <div className='card-info'>Kode Pembayaran</div>
                   <div className='card-value'>{payment.payment_code || '-'}</div>
                 </Grid>
-                <Grid item lg={3} xs={12} md={6}>
+                <Grid item lg={2} xs={12} md={6}>
                   <div className='card-info'>Metode Pembayaran</div>
-                  <div className='card-value'>{payment.store || payment.payment_type}</div>
+                  <div className='card-value'>{payment.store || payment.payment_type} (Midtrans)</div>
                 </Grid>
-                <Grid item lg={3} xs={12} md={6}>
+                <Grid item lg={2} xs={12} md={6}>
                   <div className='card-info'>Jumlah Pembayaran</div>
                   <div className='card-value'>{payment.currency} {payment.gross_amount}</div>
                 </Grid>
                 <Grid item lg={3} xs={12} md={6}>
+                  <div className='card-info'>Batas Akhir Pembayaran</div>
+                  <div className='card-value'>{moment(new Date(payment.transaction_time).getTime() + (24*60*60*1000)).format('LT, dddd, Do MMMM YYYY')}</div>
+                </Grid>
+                <Grid item lg={3} xs={12} md={6} sx={{display:'flex', justifyContent:'flex-end'}}>
                   {/* <Button size="small" sx={{textTransform:'none', mr:1}} variant='outlined'>Cara Pembayaran</Button> */}
                   <Button 
                     size='small'
@@ -99,6 +122,14 @@ export default class Payment extends Component{
                     onClick={this._handleToDetail(payment.custom_field2)}
                   >
                         Detail Event
+                  </Button>
+                  <Button 
+                    size='small'
+                    variant='outlined' 
+                    onClick={this._renderInfo(payment.token)}
+                    sx={{ml:1}}
+                  >
+                        Instruksi
                   </Button>
                 </Grid>
               </Grid>

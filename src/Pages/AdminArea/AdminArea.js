@@ -346,7 +346,7 @@ export default class AdminArea extends Component{
           <Grid item lg={4} xs={12} className="sticky">
             <Paper className={classes.paperBar}>
               <TextField 
-                placeholder="Cari kursus membuat website" 
+                placeholder="Cari event" 
                 size="small" 
                 variant="outlined"
                 value={searchTerm}

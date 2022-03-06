@@ -24,6 +24,11 @@ export default class EventDetails extends Component{
       isMentor:false,
       snackBar:{severity:'', message:''},
       eventAlreadyEnded: false,
+      bankAccount:{
+        accountNumber:'',
+        accountName:'',
+        bankName:'',
+      }
     };
 
     this.materialRef = createRef(null);
@@ -36,6 +41,15 @@ export default class EventDetails extends Component{
 
   handleCloseAlert = () => {
     this.setState({snackBar:{severity:'', message:''}});
+  }
+
+  _getBankAccount = (mentorId) => {
+    onSnapshot(doc(firestore, `banks/${mentorId}`), (bank)=> {
+      if(bank.data()){
+        const bankAccount = bank.data();
+        this.setState({bankAccount});
+      }
+    });
   }
 
   _getEventDetail = async () => {
@@ -72,6 +86,7 @@ export default class EventDetails extends Component{
           }
         };
 
+        this._getBankAccount(eventDetail.uid);
         this.setState({eventDetail, isMentor, eventAlreadyEnded}, setDiscuss());
 
         const mentorId = snap.data().uid;
@@ -313,7 +328,7 @@ export default class EventDetails extends Component{
   render(){
     const {classes} = this.props;
     const {eventDetail, mentorInfo, disabledDiscuss} = this.state;
-    const {activeTab, isMentor, eventAlreadyEnded} = this.state;
+    const {activeTab, isMentor, eventAlreadyEnded, bankAccount} = this.state;
     return(
       <Fragment>
         <Grid container spacing={2}>
@@ -545,9 +560,14 @@ export default class EventDetails extends Component{
                 </div>
                 {eventDetail.transferUrl &&
                   <div>
-                    <img src={eventDetail.transferUrl} style={{width:'100%', marginTop:10}} />
+                    <img src={eventDetail.transferUrl} style={{width:'100%', margin:10}} />
                   </div>
                 }
+                <div style={{fontSize:14, color: Colors.grey80}}>
+                  <div>Nama pemilik rekening: {bankAccount.accountName || '-'}</div>
+                  <div>Nama bank: {bankAccount.bankName || '-'}</div>
+                  <div>Nomor rekening: {bankAccount.accountNumber || '-'}</div>
+                </div>
                 
               </div>
             </Paper>

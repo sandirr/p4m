@@ -12,7 +12,7 @@ import {ConfirmationModal, PopUp} from '../../Elements';
 import { allFalse, parseMoney, revParseMoney } from '../../Helpers';
 import {firestore, storage} from '../../Configs/firebase';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { collection, doc, onSnapshot, query, setDoc, where, orderBy, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, setDoc, where, orderBy, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import moment from 'moment';
 
 export default class Home extends Component{
@@ -50,6 +50,13 @@ export default class Home extends Component{
 
       submitted:false,
       prepareToDelete: null,
+
+      setBankAccount: false,
+      bankAccount:{
+        accountNumber:'',
+        accountName:'',
+        bankName:'',
+      }
     };
 
     this._uniqueId = `p4m-${Date.now()}`;
@@ -58,12 +65,26 @@ export default class Home extends Component{
 
   componentDidUpdate(prevProps, prevState){
     if(prevState.fields !== this.state.fields){
-      this.checkFieldsError();
+      this._checkFieldsError();
     }
   }
 
   componentDidMount(){
     this._getMyEvents();
+    this._getBankAccount();
+  }
+
+  _handleToggleSetBankAcc = () => {
+    this.setState({setBankAccount:!this.state.setBankAccount});
+  }
+
+  _handleChangeBankData = (e) => {
+    this.setState({
+      bankAccount:{
+        ...this.state.bankAccount,
+        [e.target.name]: e.target.value
+      },
+    });
   }
 
   _getMyEvents = () => {
@@ -89,7 +110,31 @@ export default class Home extends Component{
     });
   }
 
-  checkFieldsError = () => {
+  _getBankAccount = () => {
+    onSnapshot(doc(firestore, `banks/${fAuth.currentUser?.uid}`), (bank)=> {
+      if(bank.data()){
+        const bankAccount = bank.data();
+        this.setState({bankAccount});
+      }
+    });
+  }
+
+  _saveBankAccount = () => {
+    setDoc(doc(firestore, `banks/${fAuth.currentUser?.uid}`), this.state.bankAccount)
+      .then(()=>{
+        this.setState({
+          snackBar:{message: 'Sukses menyimpan data', severity:'success'},
+          setBankAccount:false
+        });
+      })
+      .catch(err=>{
+        this.setState({
+          snackBar:{message: err.message, severity:'error'}
+        });
+      });
+  }
+
+  _checkFieldsError = () => {
     const {eventTitle, eventCategories, eventClass, eventCover, rangeDate, time} = this.state.fields; 
     this.setState({
       error:{
@@ -168,7 +213,7 @@ export default class Home extends Component{
     });
   }
 
-  onFilechange = async ( e ) => {
+  _onFilechange = async ( e ) => {
     /*Selected files data can be collected here.*/
     const file = e.target.files[0];
 
@@ -202,7 +247,7 @@ export default class Home extends Component{
       });
   }
 
-  handleCloseAlert = () => {
+  _handleCloseAlert = () => {
     this.setState({snackBar:{severity:'', message:''}});
   }
 
@@ -274,7 +319,7 @@ export default class Home extends Component{
   }
 
   render(){
-    const {activeTab, drawer, fields, submitted, events, prepareToDelete} = this.state;
+    const {activeTab, drawer, fields, submitted, events, prepareToDelete, bankAccount, setBankAccount} = this.state;
     let error = {};
     if(submitted){
       error = this.state.error;
@@ -284,7 +329,7 @@ export default class Home extends Component{
     return(
       <Fragment>
         <Grid container spacing={2} alignItems="center" className={classes.root} >
-          <Grid item xs={12} md={9}>
+          <Grid item xs={12} md={8}>
             <Paper className={classes.paperBar} >
               <Tabs 
                 value={activeTab} 
@@ -301,8 +346,11 @@ export default class Home extends Component{
               </Tabs>
             </Paper>
           </Grid>
-          <Grid item xs={12} md={3} alignItems='flex-end' justifyContent='flex-end'>
-            <Button fullWidth className='create-btn' onClick={this._handleOpenDrawer('Buat Event')} >+ Buat Event</Button>
+          <Grid item xs={12} md={2} alignItems='flex-end' justifyContent='flex-end'>
+            <Button fullWidth className='create-btn' onClick={this._handleOpenDrawer('Buat Event')} >+ Event</Button>
+          </Grid>
+          <Grid item xs={12} md={2} alignItems='flex-end' justifyContent='flex-end'>
+            <Button fullWidth className='create-btn' onClick={this._handleToggleSetBankAcc} >Atur Rekening</Button>
           </Grid>
           {events.map(e=>(
             <Grid item lg={4} md={6} xs={12} xl={3} key={e.eventCover}>
@@ -353,6 +401,12 @@ export default class Home extends Component{
 
         <ConfirmationModal open={Boolean(prepareToDelete)} title="Hapus Event" desc='Yakin ingin menghapus event? event yang sudah dihapus tidak dapat dipulihkan!' handleAgree={this._handleCancel} handleClose={this._handlePrepareToDelete(null)} agreeText='Hapus' />
         
+        <PopUp title='Atur Rekening Bank' maxWidth='xs' backdropClose={false} handleClose={this._handleToggleSetBankAcc} open={setBankAccount} agreeText="Simpan" handleNext={this._saveBankAccount}>
+          <TextField label="Nama pemilik rekening" name='accountName' onChange={this._handleChangeBankData} value={bankAccount.accountName} sx={{mt:2}} size='small' fullWidth />
+          <TextField label="Nama bank" name='bankName' onChange={this._handleChangeBankData} value={bankAccount.bankName} sx={{mt:2}} size='small' fullWidth />
+          <TextField label="Nomor rekening" name='accountNumber' onChange={this._handleChangeBankData} value={bankAccount.accountNumber} sx={{mt:2}} size='small' fullWidth />
+        </PopUp>
+
         <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" handleNext={this._submitData}>
           <Grid container spacing={2}>
             <Grid item md={5} xs={12}>
@@ -378,7 +432,7 @@ export default class Home extends Component{
               </div>
             </Grid>
             <Grid item md={7} xs={12}>
-              <input hidden type="file" ref={this.coverRef} onChange={this.onFilechange} />
+              <input hidden type="file" ref={this.coverRef} onChange={this._onFilechange} />
               <TextField helperText={error.eventTitle && <div style={{color:Colors.primary}}>Judul event wajib diisi</div>} name='eventTitle' onChange={this._handleChangeField} value={eventTitle} label="Judul Event" placeholder="Workshop Design Thinking" sx={{mt:1}} size='small' fullWidth InputLabelProps={{shrink: true }} />
               <Autocomplete
                 multiple
@@ -467,8 +521,8 @@ export default class Home extends Component{
             </Grid>
           </Grid>
         </PopUp>
-        <Snackbar open={Boolean(this.state.snackBar.message)} onClose={this.handleCloseAlert} anchorOrigin={{ vertical:'top', horizontal:'center' }}>
-          <Alert onClose={this.handleCloseAlert} severity={this.state.snackBar.severity} sx={{ width: '100%' }}>
+        <Snackbar open={Boolean(this.state.snackBar.message)} onClose={this._handleCloseAlert} anchorOrigin={{ vertical:'top', horizontal:'center' }}>
+          <Alert onClose={this._handleCloseAlert} severity={this.state.snackBar.severity} sx={{ width: '100%' }}>
             {this.state.snackBar.message}
           </Alert>
         </Snackbar>

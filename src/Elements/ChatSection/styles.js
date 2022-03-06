@@ -9,7 +9,7 @@ const styles ={
       display:'flex', 
       flexDirection:'column', 
       gap:6, 
-      height:'38vh !important',
+      height:'40vh !important',
       overflow:'auto',
       '&::-webkit-scrollbar':{
         display:'none',

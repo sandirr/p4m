@@ -42,6 +42,8 @@ function App() {
               {admin &&
                 <Route path={'/area-admin/:eventId'} exact component={pages.EventDetails} />
               }
+              <Route path={'/bantuan'} exact component={pages.Help} />
+              <Route path={'/faq'} exact component={pages.FAQ} />
               <Route path={'/event'} exact component={pages.JoinedEvent} />
               <Route path={'/pembayaran'} exact component={pages.Payment} />
               <Route path={['/area-mentor/:eventId/meet', '/event/:eventId/meet']} exact component={pages.JitsiMeet} />

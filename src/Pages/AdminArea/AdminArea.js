@@ -195,7 +195,7 @@ export default class AdminArea extends Component{
       return;
     }
 
-    this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'success'}});
+    this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'info'}});
     const fileRef = ref(storage, `cover-picutre/${this._uniqueId}`);
     await uploadBytes(fileRef, file)
       .then(async()=>{
@@ -414,7 +414,7 @@ export default class AdminArea extends Component{
           ))}
         </Grid>
 
-        <ConfirmationModal open={Boolean(prepareToTakeDown)} title="Hapus Event" desc='Yakin ingin take down event?' handleAgree={this._handleTakeDown} handleClose={this._handlePrepareToTakeDown(null)} agreeText='Take Down' />
+        <ConfirmationModal open={Boolean(prepareToTakeDown)} title="Take Down Event" desc='Yakin ingin take down event?' handleAgree={this._handleTakeDown} handleClose={this._handlePrepareToTakeDown(null)} agreeText='Take Down' />
         <ConfirmationModal open={Boolean(prepareToPublish)} title="Publish Event" desc='Yakin ingin publish event?' handleAgree={this._handlePublish} handleClose={this._handlePrepareToPublish(null)} agreeText='Publish' />
         
         <PopUp title={drawer} maxWidth='md' backdropClose={false} handleClose={this._handleCloseDrawer} open={Boolean(drawer)} agreeText="Publish" handleNext={this._submitData}>

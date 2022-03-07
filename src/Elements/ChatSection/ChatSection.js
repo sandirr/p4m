@@ -85,7 +85,7 @@ export default class ChatSection extends Component{
         type='image';
       }
 
-      this.setState({snackBar:{message: 'Mengunggah file...', severity:'success'}});
+      this.setState({snackBar:{message: 'Mengunggah file...', severity:'info'}});
       const fileId = Date.now();
       const fileRef = storageRef(storage, `chats/${fileId}`);
       await uploadBytes(fileRef, file)
@@ -102,7 +102,7 @@ export default class ChatSection extends Component{
                 type,
                 createdAt: Date.now(),
               }).then(()=>{
-                this.setState({message:''});
+                this.setState({message:'', snackBar:{message: 'File sukses diunggah', severity:'success'}});
               });
             }).catch((err)=>{
               this.setState({snackBar:{message: err.message, severity:'error'}});

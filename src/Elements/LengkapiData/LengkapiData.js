@@ -73,7 +73,7 @@ export default class LengkapiData extends Component{
         return;
       }
   
-      this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'success'}});
+      this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'info'}});
       const fileRef = ref(storage, `profile-picutre/${fAuth.currentUser.uid}`);
       await uploadBytes(fileRef, file)
         .then(async()=>{
@@ -106,6 +106,7 @@ export default class LengkapiData extends Component{
     body.uid = fAuth.currentUser.uid;
     setDoc(userRef, body)
       .then(()=>{
+        this.setState({snackBar:{message: 'Sukses memperbarui data', severity:'success'}});
         this.props.counterSuccess(body);
       })
       .catch(err=>{

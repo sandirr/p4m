@@ -128,7 +128,7 @@ export default class EventDetails extends Component{
         return;
       }
   
-      this.setState({snackBar:{message: 'Mengunggah file...', severity:'success'}});
+      this.setState({snackBar:{message: 'Mengunggah file...', severity:'info'}});
       const fileId = Date.now();
       const fileRef = ref(storage, `materials/${fileId}`);
       await uploadBytes(fileRef, file)
@@ -170,7 +170,7 @@ export default class EventDetails extends Component{
         return;
       }
   
-      this.setState({snackBar:{message: 'Mengunggah file...', severity:'success'}});
+      this.setState({snackBar:{message: 'Mengunggah file...', severity:'info'}});
       const fileId = Date.now();
       const fileRef = ref(storage, `transfers/${fileId}`);
       await uploadBytes(fileRef, file)

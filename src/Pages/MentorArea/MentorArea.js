@@ -231,7 +231,7 @@ export default class Home extends Component{
       return;
     }
 
-    this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'success'}});
+    this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'info'}});
     const fileRef = ref(storage, `cover-picutre/${this._uniqueId}`);
     await uploadBytes(fileRef, file)
       .then(async()=>{

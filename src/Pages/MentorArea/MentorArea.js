@@ -90,7 +90,7 @@ export default class Home extends Component{
   _getMyEvents = () => {
     const {activeTab} = this.state;
     const now = new Date();
-    let q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'));
+    let q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'), orderBy('eventEnded', 'desc'));
     
     if(activeTab === 'active')
       q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'), where('eventEnded', '>=', now), orderBy('eventEnded', 'desc'));
@@ -99,7 +99,7 @@ export default class Home extends Component{
     else if(activeTab === 'take_down')
       q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'take_down'));
     else
-      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'));
+      q = query(collection(firestore, 'events'), where('uid', '==', fAuth.currentUser?.uid), where('status', '==', 'publish'), orderBy('eventEnded', 'desc'));
 
     onSnapshot(q, (querySnapshot) => {
       const data = [];
@@ -216,35 +216,37 @@ export default class Home extends Component{
   _onFilechange = async ( e ) => {
     /*Selected files data can be collected here.*/
     const file = e.target.files[0];
-
-    const acceptedExt = ['png', 'jpg', 'jpeg', 'gif'];
-    const fileExt = file.name.split('.').reverse()[0];
-    
-    if(!acceptedExt.includes(fileExt?.toLowerCase())){
-      this.setState({snackBar:{message: 'Maaf, Anda hanya diperbolehkan mengunggah file gambar', severity:'error'}});
-      return;
+    if(file){
+      const acceptedExt = ['png', 'jpg', 'jpeg', 'gif'];
+      const fileExt = file.name.split('.').reverse()[0];
+      
+      if(!acceptedExt.includes(fileExt?.toLowerCase())){
+        this.setState({snackBar:{message: 'Maaf, Anda hanya diperbolehkan mengunggah file gambar', severity:'error'}});
+        return;
+      }
+  
+      const fileSize = file.size;
+      if(fileSize > (1000 * 5000)){
+        this.setState({snackBar:{message: 'Maaf, ukuran maksimal file adalah 5MB', severity:'error'}});
+        return;
+      }
+  
+      this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'info'}});
+      const fileRef = ref(storage, `cover-picutre/${this._uniqueId}`);
+      await uploadBytes(fileRef, file)
+        .then(async()=>{
+          await getDownloadURL(fileRef)
+            .then(url=>{
+              this.setState({fields: {...this.state.fields, eventCover: url}, snackBar:{message: 'Berhasil mengunggah gambar', severity:'success'}});
+            }).catch((err)=>{
+              this.setState({snackBar:{message: err.message, severity:'error'}});
+            });
+        })
+        .catch((err)=>{
+          this.setState({snackBar:{message: 'Gagal mengunggah gambar', severity:'error'}});
+        });
     }
 
-    const fileSize = file.size;
-    if(fileSize > (1000 * 1000)){
-      this.setState({snackBar:{message: 'Maaf, ukuran maksimal file adalah 1MB', severity:'error'}});
-      return;
-    }
-
-    this.setState({snackBar:{message: 'Mengunggah gambar...', severity:'info'}});
-    const fileRef = ref(storage, `cover-picutre/${this._uniqueId}`);
-    await uploadBytes(fileRef, file)
-      .then(async()=>{
-        await getDownloadURL(fileRef)
-          .then(url=>{
-            this.setState({fields: {...this.state.fields, eventCover: url}, snackBar:{message: 'Berhasil mengunggah gambar', severity:'success'}});
-          }).catch((err)=>{
-            this.setState({snackBar:{message: err.message, severity:'error'}});
-          });
-      })
-      .catch((err)=>{
-        this.setState({snackBar:{message: 'Gagal mengunggah gambar', severity:'error'}});
-      });
   }
 
   _handleCloseAlert = () => {

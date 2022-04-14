@@ -133,7 +133,8 @@ export default function PageBase(props) {
 
   const changeRoute = (to) => () => {
     history.push(`/${to}`);
-    handleDrawerClose();
+    if(!matches)
+      handleDrawerClose();
   };
 
   const setNumber = (e) =>{

@@ -68,8 +68,8 @@ export default class LengkapiData extends Component{
       }
   
       const fileSize = file.size;
-      if(fileSize > (1000 * 1000)){
-        this.setState({snackBar:{message: 'Maaf, ukuran maksimal file adalah 1MB', severity:'error'}});
+      if(fileSize > (1000 * 5000)){
+        this.setState({snackBar:{message: 'Maaf, ukuran maksimal file adalah 5MB', severity:'error'}});
         return;
       }
   

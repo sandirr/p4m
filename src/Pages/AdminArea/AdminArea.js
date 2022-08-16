@@ -510,7 +510,7 @@ export default class AdminArea extends Component{
               </LocalizationProvider>
 
               <TextField helperText={error.eventClass && <div style={{color:Colors.primary}}>Kelas event wajib diisi</div>} label="Kelas Event" name="eventClass" onChange={this._handleChangeField} value={eventClass} sx={{mt:2}} size='small' fullWidth InputLabelProps={{shrink: true }} select >
-                <MenuItem value={10}>Reguler (max. 10 orang)</MenuItem>
+                <MenuItem value={100}>Reguler (max. 100 orang)</MenuItem>
                 <MenuItem value={5}>VIP (private max. 5 orang)</MenuItem>
                 <MenuItem value={1}>VVIP (private 1 orang)</MenuItem>
               </TextField>

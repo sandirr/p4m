@@ -292,7 +292,8 @@ export default class EventDetails extends Component{
     switch (eventDetail?.eventClass){
     case 1 : return 'VVIP';
     case 5 : return 'VIP';
-    case 10 : return 'Reguler';
+    case 10 : 
+    case 100 : return 'Reguler';
     default: return null;
     }
   }

@@ -453,7 +453,7 @@ export default class Home extends Component{
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    helperText={error.eventCategories && <div style={{color:Colors.primary}}>Pilih setidaknya satu kategori</div>}
+                    helperText={error.eventCategories && <div style={{color:Colors.primary}}>Pilih setidaknya satu kategori dari pilihan tersedia agar event tampil pada halaman beranda</div>}
                     label="Kategori"
                     InputLabelProps={{shrink: true }}
                     placeholder="Misalnya: Informatika"

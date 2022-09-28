@@ -18,7 +18,9 @@ export default class LengkapiData extends Component{
   constructor(props){
     super(props);
     this.state= {
-      fields:{},
+      fields:{
+        email: fAuth.currentUser?.email || ''
+      },
       snackBar:{
         message:'',
         severity:''
